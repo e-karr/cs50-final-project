@@ -1,0 +1,58 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Update Contact Information
+{% endblock %}
+
+{% block main %}
+
+    <h1 class="page-title">Update Contact Information</h1>
+
+    {% if error %}
+        <p class="error"><strong>{{ error }}</strong> 
+    {% endif %}
+
+    {% if success %}
+        <p class="success"><strong>{{ success }}</strong> 
+    {% endif %}
+
+    <div class="col-sm-7 mx-auto mb-3">
+        <ul>
+            <li>Use the below form to update any aspect of your contact information.</li>
+        </ul>
+    </div>
+
+    <form action="/update" method="post">
+        <div class="form-floating col-sm-7 mx-auto mb-3">
+            <input type="text" class="form-control" id="floatingInput" placeholder="First name" name="firstname" value="{{ user[0].first_name }}">
+            <label for="floatingInput">First Name</label>
+        </div>
+        <div class="form-floating col-sm-7 mx-auto mb-3">
+            <input type="text" class="form-control" id="floatingInput" placeholder="Last name" name="lastname" value="{{ user[0].last_name }}">
+            <label for="floatingInput">Last Name</label>
+        </div>
+        <div class="form-floating col-sm-7 mx-auto">
+            <input type="tel" class="form-control" id="floatingInput" placeholder="Phone number" name="phonenumber" value="{{ user[0].phone_number }}">
+            <label for="floatingInput">Phone Number</label>
+        </div>
+        <div class="col-sm-7 mx-auto mb-3">
+            <p>Numbers only.</p>
+        </div>
+        <div class="form-floating col-sm-7 mx-auto mb-3">
+            <input type="email" class="form-control" id="floatingInput" name="email" placeholder="Email" value="{{ user[0].email }}">
+            <label for="floatingInput">Email</label>
+        </div>
+        <div class="col-sm-7 mx-auto mb-3">
+            <select class="form-select" name="gender">
+              <option disabled selected>Select Gender...</option>
+              <option {{ 'selected' if user[0].gender == "Male" }}>Male</option>
+              <option {{ 'selected' if user[0].gender == "Female" }}>Female</option>
+              <option {{ 'selected' if user[0].gender == "Non-Binary" }}>Non-Binary</option>
+            </select>
+        </div>
+        <div class="d-grid gap-2 col-6 mx-auto">
+            <button class="btn btn-kvkl" type="submit">Update Contact Information</button>
+        </div>
+    </form>
+
+{% endblock %}

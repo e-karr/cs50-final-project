@@ -1,0 +1,74 @@
+body {
+    font-family: Open Sans,Arial,sans-serif;
+    background-color: #515e4e;
+    color: white;
+}
+
+footer {
+    text-align: center;
+    color: white;
+    margin-top: 50px;
+}
+
+a.footer {
+    all: unset;
+}
+
+a.footer:hover {
+    all: unset;
+}
+
+div.homepage {
+    /*margin-top: 50px;*/
+    margin-bottom: 50px;
+    padding-left: 50px;
+    padding-right: 50px;
+}
+
+h1.page-title {
+    text-align: center;
+    margin-top: 50px;
+    margin-bottom: 50px;
+}
+
+.navbar {
+    background-color: #30382f;
+}
+
+div.modal-header, div.modal-body, div.collapse {
+    color: black;
+}
+
+.btn-kvkl {
+    background-color: #959e93;
+    border-color: #959e93;
+    color: white;
+}
+
+.btn-kvkl:hover {
+    color: white;
+    background-color: #465244;
+    border-color: #465244;
+}
+
+.error {
+    background-color: red;
+    text-align: center;
+    margin-top: 25px;
+    margin-left: 300px;
+    margin-right: 300px;
+    border-radius: 5px;
+}
+
+.form-floating {
+    color: grey;
+}
+
+.success {
+    background-color: green;
+    text-align: center;
+    margin-top: 25px;
+    margin-left: 300px;
+    margin-right: 300px;
+    border-radius: 5px;
+}

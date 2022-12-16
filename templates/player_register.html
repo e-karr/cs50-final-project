@@ -1,0 +1,87 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Player Registration
+{% endblock %}
+
+{% block main %}
+
+    <h1 class="page-title">Join a Team</h1>
+
+    {% if error %}
+        <p class="error"><strong>{{ error }}</strong> 
+    {% endif %}
+
+    {% if success %}
+        <p class="success"><strong>{{ success }}</strong> 
+    {% endif %}
+
+    <div class="col-sm-7 mx-auto mb-3">
+        <ul>
+            <li>You must submit the correct 6-digit passcode in order to join a team.</li>
+            <li>If you update your name and/or contact information in this form, your account information will also be updated.</li>
+        </ul>
+    </div>
+
+    <form action="/player_register" method="post">
+        <div class="col-sm-7 mx-auto mb-3">
+            <select class="form-select" name="event">
+                <option disabled selected>Select Event...</option>
+                {% for event in events %}
+                <option value="{{ event.event_name }}">{{ event.event_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-sm-7 mx-auto mb-3">
+            <select class="form-select" name="team">
+                <option disabled selected>Select Team...</option>
+                {% for team in teams %}
+                <option value="{{ team.team_name }}">{{ team.team_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-sm-7 mx-auto">Are you the second captain for this team?</div>
+        <div class="form-check col-sm-7 mx-auto">
+            <input class="form-check-input" type="radio" name="captain" id="captainYes">
+            <label class="form-check-label" for="captainYes">
+              Yes
+            </label>
+          </div>
+          <div class="form-check col-sm-7 mx-auto mb-3">
+            <input class="form-check-input" type="radio" name="captain" id="captainNo">
+            <label class="form-check-label" for="captainNo">
+              No
+            </label>
+          </div>
+        <div class="form-floating col-sm-7 mx-auto mb-3">
+            <input type="text" class="form-control" id="floatingInput" placeholder="First name" name="firstname" value="{{ player[0].first_name }}">
+            <label for="floatingInput">First Name</label>
+        </div>
+        <div class="form-floating col-sm-7 mx-auto mb-3">
+            <input type="text" class="form-control" id="floatingInput" placeholder="Last name" name="lastname" value="{{ player[0].last_name }}">
+            <label for="floatingInput">Last Name</label>
+        </div>
+        <div class="form-floating col-sm-7 mx-auto">
+            <input type="tel" class="form-control" id="floatingInput" placeholder="Phone number" name="phonenumber" value="{{ player[0].phone_number }}">
+            <label for="floatingInput">Phone Number</label>
+        </div>
+        <div class="col-sm-7 mx-auto mb-3">
+            <p>Numbers only.</p>
+        </div>
+        <div class="form-floating col-sm-7 mx-auto mb-3">
+            <input type="email" class="form-control" id="floatingInput" name="email" placeholder="Email" value="{{ player[0].email }}">
+            <label for="floatingInput">Email</label>
+        </div>
+        <div class="form-floating col-sm-7 mx-auto">
+            <input type="number" class="form-control" id="floatingInput" name="passcode" placeholder="Passcode">
+            <label for="floatingInput">Passcode</label>
+        </div>
+        <div class="col-sm-7 mx-auto mb-3">
+            <p>Passcode must match the 6-digit passcode given to you by the captain who registered the team.</p>
+        </div>
+        <div class="d-grid gap-2 col-6 mx-auto">
+            <button class="btn btn-kvkl" type="submit">Join Team</button>
+        </div>
+    </form>
+
+{% endblock %}

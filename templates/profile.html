@@ -1,0 +1,57 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Profile
+{% endblock %}
+
+{% block main %}
+
+    <h1 class="page-title">Profile</h1>
+
+    {% if error %}
+        <p class="error"><strong>{{ error }}</strong> 
+    {% endif %}
+
+    {% if success %}
+        <p class="success"><strong>{{ success }}</strong> 
+    {% endif %}
+
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <h3 class="text-center mb-3">Contact Information</h3>
+                <div class="list-group list-group-item mb-3">
+                    <p>First Name: {{ user[0].first_name }}</p>
+                    <p>Last Name: {{ user[0].last_name }}</p>
+                    <p>Email: {{ user[0].email }}</p>
+                    <p>Phone Number: {{ user[0].phone_number }}</p>
+                    <p>Gender: {{ user[0].gender }}</p>
+                </div>
+                <div class="d-grid gap-2 col-6 mx-auto">
+                    <a href="/update"><button class="btn btn-kvkl" type="button">Update Contact Information</button></a>
+                </div>
+            </div>
+            <div class="col">
+                <h3 class="text-center mb-3">Registration History</h3>
+                {% for team in history %}
+
+                    <div class="list-group list-group-item">
+                        <!--<a class="list-group-item list-group-item-action" aria-current="true">-->
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">{{ team.team_name }}</h5>
+                                <small>Captain: {{ team.captain }}</small>
+                            </div>
+                                <div>{{ team.event_name }}</div>
+                                <small class="mb-1">{{ team.month }} {{ team.day }}, {{ team.year }}; {{ team.time }}</small>
+                            <div class="d-flex w-100 justify-content-between">
+                                <small>{{ team.location }}</small>
+                            </div>
+                        <!--</a>-->
+                    </div>
+
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
