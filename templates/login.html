@@ -8,14 +8,6 @@
 
     <h1 class="page-title">Log In</h1>
 
-    {% if error %}
-        <p class="error"><strong>{{ error }}</strong> 
-    {% endif %}
-
-    {% if success %}
-        <p class="success"><strong>{{ success }}</strong> 
-    {% endif %}
-
     <form action="/login" method="post">
         <div class="form-floating col-sm-7 mx-auto mb-3">
             <input type="email" class="form-control" id="floatingInput" name="email" placeholder="Email">

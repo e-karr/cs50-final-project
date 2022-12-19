@@ -117,12 +117,27 @@ def account():
     flash("You have successfully created an account.", "success")
     return redirect("/")
 
+@app.route("/delete_account", methods=["POST"])
+def delete_account():
+
+    captain = db.execute("SELECT captain, team_name FROM registered_players INNER JOIN teams ON teams.id = registered_players.team_id WHERE player_id = ?", session["user_id"])
+
+    for i in captain:
+        if i["captain"] == "Yes":
+            flash("Must designate alternative captain for " + i["team_name"] + " before deleting account.", "error")
+            return redirect("/profile")
+
+    db.execute("DELETE FROM accounts WHERE id = ?", session["user_id"])
+
+    flash("Your account was successfully deleted.", "success")
+    return redirect("/")
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """Log user in"""
 
     # Forget any user_id
-    session.clear()
+    # session.clear()
 
     # User reached route via POST
     if request.method == "POST": 
@@ -150,7 +165,7 @@ def login():
             return redirect("/login")
 
         if not check_password_hash(rows[0]["password_hash"], password):
-            flash("Invalid password", "error")
+            flash("Invalid password.", "error")
             return redirect("/login")
 
         # Remember which user has logged in
@@ -382,7 +397,7 @@ def profile():
 
     user = db.execute("SELECT * FROM accounts where id = ?", session["user_id"])
 
-    history = db.execute("SELECT event_name, month, day, year, time, location, team_name, passcode, captain FROM events INNER JOIN teams ON events.id = teams.event_id INNER JOIN registered_players ON registered_players.team_id = teams.id WHERE registered_players.player_id = ? ORDER BY day ASC", session["user_id"])
+    history = db.execute("SELECT event_name, month, day, year, time, location, team_name, passcode, captain, teams.id FROM events INNER JOIN teams ON events.id = teams.event_id INNER JOIN registered_players ON registered_players.team_id = teams.id WHERE registered_players.player_id = ?", session["user_id"])
 
     return render_template("profile.html", id=session["user_id"], user=user, history=history)
 

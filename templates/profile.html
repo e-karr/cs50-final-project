@@ -8,15 +8,7 @@
 
     <h1 class="page-title">Profile</h1>
 
-    {% if error %}
-        <p class="error"><strong>{{ error }}</strong> 
-    {% endif %}
-
-    {% if success %}
-        <p class="success"><strong>{{ success }}</strong> 
-    {% endif %}
-
-    <div class="container">
+    <div class="container mb-5">
         <div class="row">
             <div class="col">
                 <h3 class="text-center mb-3">Contact Information</h3>
@@ -35,19 +27,101 @@
                 <h3 class="text-center mb-3">Registration History</h3>
                 {% for team in history %}
 
-                    <div class="list-group list-group-item">
-                            <div class="d-flex w-100 justify-content-between">
+                    <div class="list-group list-group-item container">
+                        <div class="row">
+                            <div class="col">
                                 <h5 class="mb-1">{{ team.team_name }}</h5>
-                                <small>Captain: {{ team.captain }}</small>
-                            </div>
                                 <div>{{ team.event_name }}</div>
                                 <small class="mb-1">{{ team.month }} {{ team.day }}, {{ team.year }}; {{ team.time }}</small>
-                            <div class="d-flex w-100 justify-content-between">
-                                <small>{{ team.location }}</small>
+                                <p><small>{{ team.location }}</small></p>
                             </div>
+                            <div class="col text-end">
+                                <small>Captain: {{ team.captain }}</small>
+                                {% if team.captain == "Yes" %}
+                                <div><small>Passcode: {{ team.passcode }}</small></div>
+                            {% endif %}
+                            {% if team.captain == "Yes" %}
+                            <div></div>
+                                <div><button type="button" class="btn btn-kvkl mb-1 btn-sm" data-bs-toggle="modal" data-bs-target="#deregisterModal{{team.id}}">De-register Team</button></div>
+                                <div class="d-flex flex-row-reverse">
+                                    <button type="button" class="btn btn-kvkl btn-sm" data-bs-toggle="modal" data-bs-target="#leaveModal{{team.id}}">Leave Team</button>
+                                    <button type="button" class="btn btn-kvkl btn-sm me-1" data-bs-toggle="modal" data-bs-target="#captainModal{{team.id}}">Update Captain</button>
+                                </div>
+
+                                <!-- De-Register Modal -->
+                                <div class="modal fade" id="deregisterModal{{team.id}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h1 class="modal-title fs-5" id="exampleModalLabel">De-Register a Team</h1>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body text-start">
+                                                Are you sure you want to de-register {{ team.team_name }}?
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <button type="submit" class="btn btn-kvkl">De-Register Team</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Update Captain Modal -->
+                                <div class="modal fade" id="captainModal{{team.id}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h1 class="modal-title fs-5" id="exampleModalLabel">Update Captain</h1>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body text-start">
+                                                <form action="/update_captain" method="POST">
+                                                    <select class="form-select" name="captain">
+                                                        <option disabled selected>Select New Captain...</option>
+                                                        <!-- add list of team members -->
+                                                    </select>
+                                                </form>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <button type="submit" class="btn btn-kvkl">Update Captain</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            {% endif %}
+                            </div>
+                        </div>
                     </div>
 
                 {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center">
+        <button class="btn btn-kvkl" type="button" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">Delete Account</button>
+
+        <!-- Delete Account Modal -->
+        <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="exampleModalLabel">Delete Account</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-start">
+                        Are you sure you want to delete your account?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <form action="/delete_account" method="POST">
+                            <button type="submit" class="btn btn-kvkl">Delete Account</button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

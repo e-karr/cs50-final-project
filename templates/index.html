@@ -7,33 +7,29 @@
 {% block main %}
     <h1 class="page-title">Upcoming KVKL Events</h1>
 
-    {% if error %}
-        <p class="error"><strong>{{ error }}</strong> 
-    {% endif %}
-
-    {% if success %}
-        <p class="success"><strong>{{ success }}</strong> 
-    {% endif %}
-
     <div class="homepage">
         {% for event in events %}
 
-            <div class="list-group">
-                <div class="list-group-item" aria-current="true">
-                    <div class="d-flex w-100 justify-content-between">
-                        <h5 class="mb-1">{{ event.event_name }}</h5>
-                        <small>{{ event.spots_available }} spots left / {{ event.number_teams }} total teams</small>
+            <div class="list-group list-group-item container">
+                <div class="row">
+                    <div class="col">
+                        <h5>{{ event.event_name }}</h5>
+                        <div>{{ event.month }} {{ event.day }}, {{ event.year }}; {{ event.time }}</div>
+                        <div><small>{{ event.location }}</small></div>
                     </div>
-                    <p class="mb-1">{{ event.month }} {{ event.day }}, {{ event.year }}; {{ event.time }}</p>
-                    <div class="d-flex w-100 justify-content-between">
-                        <div class="me-auto"><small>{{ event.location }}</small></div>
-                        <div class="me-2"><button type="button" class="btn btn-kvkl" data-bs-toggle="modal" data-bs-target="#modal{{event.id}}">Sign Up</button></div>
-                        <div><button type="button" class="btn btn-kvkl" data-bs-toggle="collapse" data-bs-target="#collapse{{event.id}}" aria-expanded="false" aria-controls="collapseExample">Registered Teams</button></div>
+                    <div class="col text-end">
+                        <small>{{ event.spots_available }} spots left / {{ event.number_teams }} total teams</small>
+                        <div class="d-flex w-100 justify-content-end mt-3">
+                            <div class="me-2"><button type="button" class="btn btn-kvkl" data-bs-toggle="modal" data-bs-target="#modal{{event.id}}">Sign Up</button></div>
+                            <div><button type="button" class="btn btn-kvkl" data-bs-toggle="collapse" data-bs-target="#collapse{{event.id}}" aria-expanded="false" aria-controls="collapseExample">Registered Teams</button></div>
+                        </div>
                     </div>
                 </div>
                 <div class="collapse" id="collapse{{event.id}}">
                     <div class="card card-body">
-                      Some placeholder content for the collapse component. This panel is hidden by default but revealed when the user activates the relevant trigger.
+                        <ul>
+                            <li>placeholder for team name</li>
+                        </ul>
                     </div>
                   </div>
             </div>

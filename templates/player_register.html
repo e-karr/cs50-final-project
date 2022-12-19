@@ -8,14 +8,6 @@
 
     <h1 class="page-title">Join a Team</h1>
 
-    {% if error %}
-        <p class="error"><strong>{{ error }}</strong> 
-    {% endif %}
-
-    {% if success %}
-        <p class="success"><strong>{{ success }}</strong> 
-    {% endif %}
-
     <div class="col-sm-7 mx-auto mb-3">
         <ul>
             <li>You must submit the correct 6-digit passcode in order to join a team.</li>
@@ -25,15 +17,15 @@
 
     <form action="/player_register" method="post">
         <div class="col-sm-7 mx-auto mb-3">
-            <select class="form-select" name="event">
+            <select class="form-select" name="event" id="event-registration">
                 <option disabled selected>Select Event...</option>
                 {% for event in events %}
-                <option value="{{ event.event_name }}">{{ event.event_name }}</option>
+                    <option value="{{ event.event_name }}">{{ event.event_name }}</option>
                 {% endfor %}
             </select>
         </div>
         <div class="col-sm-7 mx-auto mb-3">
-            <select class="form-select" name="team">
+            <select class="form-select" name="team" id="team-registration">
                 <option disabled selected>Select Team...</option>
                 {% for team in teams %}
                 <option value="{{ team.team_name }}">{{ team.team_name }}</option>
