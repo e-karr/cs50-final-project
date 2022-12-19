@@ -382,7 +382,7 @@ def profile():
 
     user = db.execute("SELECT * FROM accounts where id = ?", session["user_id"])
 
-    history = db.execute("SELECT event_name, month, day, year, time, location, team_name, captain FROM events INNER JOIN teams ON events.id = teams.event_id INNER JOIN registered_players ON registered_players.team_id = teams.id WHERE registered_players.player_id = ? ORDER BY day ASC", session["user_id"])
+    history = db.execute("SELECT event_name, month, day, year, time, location, team_name, passcode, captain FROM events INNER JOIN teams ON events.id = teams.event_id INNER JOIN registered_players ON registered_players.team_id = teams.id WHERE registered_players.player_id = ? ORDER BY day ASC", session["user_id"])
 
     return render_template("profile.html", id=session["user_id"], user=user, history=history)
 
