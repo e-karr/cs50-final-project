@@ -288,9 +288,39 @@ def team_register():
     flash("You have successfully registered your team. Your team passcode is %d. This passcode will also be emailed to you" % (passcode), "success")
     return redirect("/team_register")
 
+@app.route("/event_select", methods=["GET", "POST"])
+def event_select():
+    """Select an event before joining a team"""
+
+    # Select contact info from logged in user
+    player = db.execute("SELECT email, first_name, last_name, phone_number FROM accounts WHERE id = ?", session["user_id"])
+
+    if request.method == "GET":
+        
+        # Select events from events table
+        events = db.execute("SELECT * FROM events")
+
+        return render_template("event_selection.html", player=player, events=events)
+
+    # Get selected event
+    event = request.form.get("event")
+
+    if not event:
+        flash("Must select an event.", "error")
+        return redirect("/event_select")
+
+    if event:
+            event_id = db.execute("SELECT id FROM events WHERE event_name = ?", event)
+            
+            # Select teams registered for selected event
+            teams = db.execute("SELECT * FROM teams WHERE event_id = ?", event_id[0]["id"])
+
+    return render_template("player_register.html", player=player, event=event, teams=teams)
+        
+
 @app.route("/player_register", methods=["GET", "POST"])
 def player_register():
-    """Join a team"""
+    """Join a team after selecting an event"""
    
     # Select contact info from logged in user
     player = db.execute("SELECT email, first_name, last_name, phone_number FROM accounts WHERE id = ?", session["user_id"])
@@ -298,12 +328,7 @@ def player_register():
     # User reached route via GET
     if request.method == "GET":
 
-        # Select events from events table
-        events = db.execute("SELECT * FROM events")
-
         event = request.args.get("event")
-
-        teams = {}
 
         if event:
             event_id = db.execute("SELECT id FROM events WHERE event_name = ?", event)
@@ -311,7 +336,7 @@ def player_register():
             # Select teams registered for selected event
             teams = db.execute("SELECT * FROM teams WHERE event_id = ?", event_id[0]["id"])
 
-        return render_template("player_register.html", events=events, player=player, teams=teams)
+        return render_template("player_register.html", event=event, player=player, teams=teams)
 
     # User reached route via POST
 
@@ -322,11 +347,19 @@ def player_register():
     last_name = request.form.get("lastname")
     phone_number = request.form.get("phonenumber")
     email = request.form.get("email")
-    passcode = int(request.form.get("passcode"))
+    passcode = request.form.get("passcode")
     captain2 = request.form.get("captain")
+
+    if not event:
+        flash("Must select an event.", "error")
+        return redirect("/event_select")
 
     # Get event ID
     event_id = db.execute("SELECT id FROM events WHERE event_name = ?", event)
+
+    if not team:
+        flash("Must select a team.", "error")
+        return redirect("/event_select")
 
     # Get team ID
     team_id = db.execute("SELECT id FROM teams WHERE event_id = ? AND team_name = ?", event_id[0]["id"], team)
@@ -334,41 +367,41 @@ def player_register():
     # Get team passcode
     team_passcode = db.execute("SELECT passcode FROM teams WHERE id = ?", team_id[0]["id"])
 
-    if not event:
-        flash("Must select an event.", "error")
-        return redirect("/player_register")
-
-    if not team:
-        flash("Must select a team.", "error")
-        return redirect("/player_register")
+    if not captain2:
+        flash("Must answer captain question.", "error")
+        return redirect("/event_select")
 
     if not first_name:
         flash("Must enter a first name.", "error")
-        return redirect("/player_register")
+        return redirect("/event_select")
 
     if not last_name:
         flash("Must enter a last name.", "error")
-        return redirect("/player_register")
+        return redirect("/event_select")
 
     if not phone_number:
         flash("Must enter a phone number.", "error")
-        return redirect("/player_register")
+        return redirect("/event_select")
 
     if not phone_number.isdigit():
         flash("Phone number must only contain numbers.", "error")
-        return redirect("/player_register")
+        return redirect("/event_select")
 
     if not email:
         flash("Must enter an email.", "error")
-        return redirect("/player_register")
+        return redirect("/event_select")
 
     if not passcode:
         flash("Must enter a passcode.", "error")
-        return redirect("/player_register")
+        return redirect("/event_select")
+
+    if len(passcode) != 6:
+        flash("Passcode must be 6 digits", "error")
+        return redirect("/event_select")
 
     if passcode != team_passcode[0]["passcode"]:
         flash("Invalid passcode.", "error")
-        return redirect("/player_register")
+        return redirect("/event_select")
 
     # Update captain_2, if necessary
     if captain2 == "Yes":
@@ -388,6 +421,10 @@ def player_register():
         db.execute("UPDATE accounts SET email = ? WHERE id = ?", email, session["user_id"])
 
     # Update registered_players
+    db.execute("INSERT INTO registered_players (captain, player_id, team_id) VALUES (?, ?, ?)", captain2, session["user_id"], team_id[0]["id"])
+
+    flash("You have successfully registered for %d." % (team), "success")
+    return redirect("/profile")
     
 @app.route("/profile", methods=["GET", "POST"])
 def profile():

@@ -1,12 +1,13 @@
-from flask import Flask, render_template, request, jsonify, json
-from flask_sqlalchemy import SQLAlchemy  
-from wtforms import SelectField
-from flask_wtf import FlaskForm
+from cs50 import SQL
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///kvkl_registration.db'
+# Configure CS50 Library to use SQLite database
+db = SQL("sqlite:///kvkl_registration.db")
 
-db = SQLAlchemy(app)
+teams = db.execute("SELECT event_name, team_name FROM events INNER JOIN teams ON events.id=teams.event_id GROUP BY events.id")
 
+passcode = db.execute("SELECT team_name, passcode FROM teams")
 
+print(passcode)
+
+print(teams)
 

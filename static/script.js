@@ -1,11 +1,12 @@
 // Run script once DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
 
-    // dynamic select lists for player registration
-    const selectEvent = document.querySelector("#event-registration");
+    let db = new sqlite3.Database("/kvkl_registration.db", sqlite3.OPEN_READWRITE, (err) => {
+        if (err) {
+            console.error(err.message);
+        }
 
-    selectEvent.addEventListener("change", (event) => {
-        
-    })
+        console.log("Connected to the kvkl database.");
+    });
 
 });
