@@ -4,7 +4,6 @@ from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 from random import randint
 
-
 # Configure application
 app = Flask(__name__)
 
@@ -289,21 +288,10 @@ def team_register():
     flash("You have successfully registered your team. Your team passcode is %d. This passcode will also be emailed to you" % (passcode), "success")
     return redirect("/team_register")
 
-@app.route("/event_select", methods=["POST"])
-def event_select():
-    
-    # Get selected event
-    event = request.form.get("event")
-
-    # Get event ID
-    session["event_id"] = db.execute("SELECT id FROM events WHERE event_name = ?", event)
-
-    return redirect(url_for("player_register"))
-
 @app.route("/player_register", methods=["GET", "POST"])
 def player_register():
     """Join a team"""
-
+   
     # Select contact info from logged in user
     player = db.execute("SELECT email, first_name, last_name, phone_number FROM accounts WHERE id = ?", session["user_id"])
 
@@ -313,24 +301,22 @@ def player_register():
         # Select events from events table
         events = db.execute("SELECT * FROM events")
 
-        # Select teams registered for selected event
-        #teams = db.execute("SELECT * FROM teams WHERE event_id = ?", event_id[0]["id"])
+        event = request.args.get("event")
 
-        return render_template("player_register.html", events=events, player=player)
+        teams = {}
+
+        if event:
+            event_id = db.execute("SELECT id FROM events WHERE event_name = ?", event)
+            
+            # Select teams registered for selected event
+            teams = db.execute("SELECT * FROM teams WHERE event_id = ?", event_id[0]["id"])
+
+        return render_template("player_register.html", events=events, player=player, teams=teams)
 
     # User reached route via POST
-    event = request.form.get("event")
-
-    if event:
-
-        event_id = session.get("event_id", None)
-        
-        # Select teams registered for selected event
-        teams = db.execute("SELECT * FROM teams WHERE event_id = ?", event_id[0]["id"])
-        return render_template("player_register.html", teams=teams)
 
     # Validate form inputs
-    
+    event = request.form.get("event")
     team = request.form.get("team")
     first_name = request.form.get("firstname")
     last_name = request.form.get("lastname")
