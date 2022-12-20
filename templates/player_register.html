@@ -15,20 +15,22 @@
         </ul>
     </div>
 
-    <form action="/player_register" method="post">
+    <form action="/event_select" method="post">
         <div class="col-sm-7 mx-auto mb-3">
-            <select class="form-select" name="event" id="event-registration">
+            <select class="form-select" name="event" onChange="this.form.submit()">
                 <option disabled selected>Select Event...</option>
                 {% for event in events %}
                     <option value="{{ event.event_name }}">{{ event.event_name }}</option>
                 {% endfor %}
             </select>
         </div>
+    </form>
+    <form action="/player_register" method="post">
         <div class="col-sm-7 mx-auto mb-3">
-            <select class="form-select" name="team" id="team-registration">
+            <select class="form-select" name="team">
                 <option disabled selected>Select Team...</option>
                 {% for team in teams %}
-                <option value="{{ team.team_name }}">{{ team.team_name }}</option>
+                    <option value="{{ team.team_name }}">{{ team.team_name }}</option>
                 {% endfor %}
             </select>
         </div>
