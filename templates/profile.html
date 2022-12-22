@@ -6,7 +6,7 @@
 
 {% block main %}
 
-    <h1 class="page-title">Profile</h1>
+    <h1 class="page-title">{{ user[0].first_name }} {{ user[0].last_name }}</h1>
 
     <div class="container mb-5">
         <div class="row">
@@ -19,8 +19,9 @@
                     <p>Phone Number: {{ user[0].phone_number }}</p>
                     <p>Gender: {{ user[0].gender }}</p>
                 </div>
-                <div class="d-grid gap-2 col-6 mx-auto">
+                <div class="d-grid gap-2 col-6 mx-auto text-center">
                     <a href="/update"><button class="btn btn-kvkl" type="button">Update Contact Information</button></a>
+                    <a href="/password"><button class="btn btn-kvkl" type="button">Change Password</button></a>
                 </div>
             </div>
             <div class="col">
@@ -33,23 +34,97 @@
                                 <h5 class="mb-1">{{ team.team_name }}</h5>
                                 <div>{{ team.event_name }}</div>
                                 <small class="mb-1">{{ team.month }} {{ team.day }}, {{ team.year }}; {{ team.time }}</small>
-                                <p><small>{{ team.location }}</small></p>
+                                <div><small>{{ team.location }}</small></div>
+                                <div><button type="button" class="btn btn-link btn-sm" data-bs-toggle="modal" data-bs-target="#teamRosterModal{{team.id}}">Team Roster</button></div>
                             </div>
+
+                            <!-- Team Roster Modal -->
+                            <div class="modal fade" id="teamRosterModal{{team.id}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h1 class="modal-title fs-5" id="exampleModalLabel">Team Roster</h1>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body text-start">
+                                            <ul>
+                                                {% for player in team["players"] %}
+                                                    <li>{{ player.first_name }} {{ player.last_name }} {% if player.captain == "Yes" %} (Captain) {% endif %}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="col text-end">
                                 <small>Captain: {{ team.captain }}</small>
                                 {% if team.captain == "Yes" %}
-                                <div><small>Passcode: {{ team.passcode }}</small></div>
-                            {% endif %}
-                            {% if team.captain == "Yes" %}
-                            <div></div>
-                                <div><button type="button" class="btn btn-kvkl mb-1 btn-sm" data-bs-toggle="modal" data-bs-target="#deregisterModal{{team.id}}">De-register Team</button></div>
-                                <div class="d-flex flex-row-reverse">
+                                    <div>
+                                        <small>Passcode: {{ team.passcode }}</small>
+                                    </div>
+                                    <div>
+                                        <button type="button" class="btn btn-kvkl mb-1 btn-sm" data-bs-toggle="modal" data-bs-target="#captainModal{{team.id}}">Update Captain</button>
+                                        <button type="button" class="btn btn-kvkl mb-1 btn-sm" data-bs-toggle="modal" data-bs-target="#deregisterModal{{team.id}}">De-register Team</button>
+                                    </div>
+
+                                    <!-- De-Register Modal -->
+                                    <div class="modal fade" id="deregisterModal{{team.id}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h1 class="modal-title fs-5" id="exampleModalLabel">De-Register a Team</h1>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body text-start">
+                                                    Are you sure you want to de-register {{ team.team_name }}?
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <form action="/de-register_team" method="post"><button type="submit" name="de-register" value="{{ team.id }}" class="btn btn-kvkl">De-Register Team</button></form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Update Captain Modal -->
+                                    <div class="modal fade" id="captainModal{{team.id}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h1 class="modal-title fs-5" id="exampleModalLabel">Update Captain</h1>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <form action="/update_captain" method="POST"></form>
+                                                    <div class="modal-body text-start">
+                                                    
+                                                        <select class="form-select" name="new_captain">
+                                                            <option disabled selected>Select New Captain...</option>
+                                                                {% for player in team["players"] %}
+                                                                    <option value="{{ player.id }}">{{ player.first_name }} {{ player.last_name }} {% if player.captain == "Yes" %} (Captain) {% endif %}</option>
+                                                                {% endfor %}
+                                                        </select>
+                                                    
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        <button type="submit" name="team_id" value="{{ team.id }}" class="btn btn-kvkl">Update Captain</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                {% endif %}
+                                <div>                                        
                                     <button type="button" class="btn btn-kvkl btn-sm" data-bs-toggle="modal" data-bs-target="#leaveModal{{team.id}}">Leave Team</button>
-                                    <button type="button" class="btn btn-kvkl btn-sm me-1" data-bs-toggle="modal" data-bs-target="#captainModal{{team.id}}">Update Captain</button>
                                 </div>
 
-                                <!-- De-Register Modal -->
-                                <div class="modal fade" id="deregisterModal{{team.id}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                <!-- Leave Team Modal -->
+                                <div class="modal fade" id="leaveModal{{team.id}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                                     <div class="modal-dialog modal-dialog-centered">
                                         <div class="modal-content">
                                             <div class="modal-header">
@@ -57,41 +132,15 @@
                                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                             </div>
                                             <div class="modal-body text-start">
-                                                Are you sure you want to de-register {{ team.team_name }}?
+                                                Are you sure you want to leave {{ team.team_name }}?
                                             </div>
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                <button type="submit" class="btn btn-kvkl">De-Register Team</button>
+                                                <form action="/leave_team" method="post"><button type="submit" name="leave" value="{{ team.id }}" class="btn btn-kvkl">Leave Team</button></form>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-
-                                <!-- Update Captain Modal -->
-                                <div class="modal fade" id="captainModal{{team.id}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog modal-dialog-centered">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h1 class="modal-title fs-5" id="exampleModalLabel">Update Captain</h1>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body text-start">
-                                                <form action="/update_captain" method="POST">
-                                                    <select class="form-select" name="captain">
-                                                        <option disabled selected>Select New Captain...</option>
-                                                        <!-- add list of team members -->
-                                                    </select>
-                                                </form>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                <button type="submit" class="btn btn-kvkl">Update Captain</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                            {% endif %}
                             </div>
                         </div>
                     </div>

@@ -1,8 +1,10 @@
 from cs50 import SQL
 from flask import Flask, flash, redirect, render_template, request, session, url_for
+from flask_login import login_required
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 from random import randint
+from functools import wraps
 
 # Configure application
 app = Flask(__name__)
@@ -15,12 +17,33 @@ Session(app)
 # Configure CS50 Library to use SQLite database
 db = SQL("sqlite:///kvkl_registration.db")
 
+def login_required(f):
+    """
+    Decorate routes to require login.
+
+    https://flask.palletsprojects.com/en/1.1.x/patterns/viewdecorators/
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if session.get("user_id") is None:
+            return redirect("/login")
+        return f(*args, **kwargs)
+    return decorated_function
+
 @app.route("/", methods=["GET"])
 def index():
     """Generate homepage with list of events"""
 
     # Generate list of events
     events = db.execute("SELECT * FROM events")
+
+    # Get teams signed up for events
+    for event in events:
+        event["teams"] = db.execute("SELECT team_name, id, sponsor FROM teams where event_id = ?", event["id"])
+
+    for event in events:
+        for team in event["teams"]:
+            team["players"] = db.execute("SELECT first_name, last_name, accounts.id, captain FROM accounts INNER JOIN registered_players ON accounts.id = registered_players.player_id WHERE team_id = ?", team["id"])
 
     # Show homepage
     return render_template("index.html", events=events)
@@ -116,27 +139,9 @@ def account():
     flash("You have successfully created an account.", "success")
     return redirect("/")
 
-@app.route("/delete_account", methods=["POST"])
-def delete_account():
-
-    captain = db.execute("SELECT captain, team_name FROM registered_players INNER JOIN teams ON teams.id = registered_players.team_id WHERE player_id = ?", session["user_id"])
-
-    for i in captain:
-        if i["captain"] == "Yes":
-            flash("Must designate alternative captain for " + i["team_name"] + " before deleting account.", "error")
-            return redirect("/profile")
-
-    db.execute("DELETE FROM accounts WHERE id = ?", session["user_id"])
-
-    flash("Your account was successfully deleted.", "success")
-    return redirect("/")
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """Log user in"""
-
-    # Forget any user_id
-    # session.clear()
 
     # User reached route via POST
     if request.method == "POST": 
@@ -178,6 +183,7 @@ def login():
         return render_template("login.html")
 
 @app.route("/logout")
+@login_required
 def logout():
     """Log user out"""
 
@@ -185,10 +191,28 @@ def logout():
     session.clear()
 
     # Redirect user to homepage
-    flash("You have successfully logged out", "success")
+    flash("You have successfully logged out.", "success")
+    return redirect("/")
+
+@app.route("/delete_account", methods=["POST"])
+@login_required
+def delete_account():
+
+    captain = db.execute("SELECT captain, team_name FROM registered_players INNER JOIN teams ON teams.id = registered_players.team_id WHERE player_id = ?", session["user_id"])
+
+    for i in captain:
+        if i["captain"] == "Yes":
+            flash("Must designate alternative captain for %s before deleting account." % (i["team_name"]), "error")
+            return redirect("/profile")
+
+    db.execute("DELETE FROM accounts WHERE id = ?", session["user_id"])
+
+    flash("Your account was successfully deleted.", "success")
+    logout()
     return redirect("/")
 
 @app.route("/team_register", methods=["GET", "POST"])
+@login_required
 def team_register():
     """Register a new team"""
 
@@ -277,7 +301,7 @@ def team_register():
         db.execute("UPDATE accounts SET email = ? WHERE id = ?", email, session["user_id"])
 
     # Insert into teams database and update spots available
-    db.execute("INSERT INTO teams (team_name, sponsor, event_id, captain_1, captain_2, passcode) VALUES (?, ?, ?, ?, ?, ?)", team_name, sponsor, event_id[0]["id"], captain[0]["first_name"], "N/A", passcode)
+    db.execute("INSERT INTO teams (team_name, sponsor, event_id, passcode) VALUES (?, ?, ?, ?)", team_name, sponsor, event_id[0]["id"], passcode)
 
     db.execute("UPDATE events SET spots_available = spots_available - 1 WHERE id = ?", event_id[0]["id"])
 
@@ -289,6 +313,7 @@ def team_register():
     return redirect("/team_register")
 
 @app.route("/event_select", methods=["GET", "POST"])
+@login_required
 def event_select():
     """Select an event before joining a team"""
 
@@ -319,6 +344,7 @@ def event_select():
         
 
 @app.route("/player_register", methods=["GET", "POST"])
+@login_required
 def player_register():
     """Join a team after selecting an event"""
    
@@ -348,7 +374,6 @@ def player_register():
     phone_number = request.form.get("phonenumber")
     email = request.form.get("email")
     passcode = request.form.get("passcode")
-    captain2 = request.form.get("captain")
 
     if not event:
         flash("Must select an event.", "error")
@@ -365,11 +390,10 @@ def player_register():
     team_id = db.execute("SELECT id FROM teams WHERE event_id = ? AND team_name = ?", event_id[0]["id"], team)
 
     # Get team passcode
+    
     team_passcode = db.execute("SELECT passcode FROM teams WHERE id = ?", team_id[0]["id"])
-
-    if not captain2:
-        flash("Must answer captain question.", "error")
-        return redirect("/event_select")
+    team_passcode = int(team_passcode[0]["passcode"])
+    print(team_passcode)
 
     if not first_name:
         flash("Must enter a first name.", "error")
@@ -399,13 +423,11 @@ def player_register():
         flash("Passcode must be 6 digits", "error")
         return redirect("/event_select")
 
-    if passcode != team_passcode[0]["passcode"]:
+    passcode = int(passcode)
+
+    if passcode != team_passcode:
         flash("Invalid passcode.", "error")
         return redirect("/event_select")
-
-    # Update captain_2, if necessary
-    if captain2 == "Yes":
-        db.execute("UPDATE teams SET captain_2 = ? WHERE id = ?", first_name, team_id[0]["id"])
 
     # Update account information, if necessary
     if first_name != player[0]["first_name"]:
@@ -421,22 +443,30 @@ def player_register():
         db.execute("UPDATE accounts SET email = ? WHERE id = ?", email, session["user_id"])
 
     # Update registered_players
-    db.execute("INSERT INTO registered_players (captain, player_id, team_id) VALUES (?, ?, ?)", captain2, session["user_id"], team_id[0]["id"])
+    db.execute("INSERT INTO registered_players (captain, player_id, team_id) VALUES (?, ?, ?)", "No", session["user_id"], team_id[0]["id"])
 
-    flash("You have successfully registered for %d." % (team), "success")
+    flash("You have successfully registered for %s." % (team), "success")
     return redirect("/profile")
     
 @app.route("/profile", methods=["GET", "POST"])
+@login_required
 def profile():
     """Show user profile"""
 
+    # get user information from accounts table
     user = db.execute("SELECT * FROM accounts where id = ?", session["user_id"])
 
+    # get registration history
     history = db.execute("SELECT event_name, month, day, year, time, location, team_name, passcode, captain, teams.id FROM events INNER JOIN teams ON events.id = teams.event_id INNER JOIN registered_players ON registered_players.team_id = teams.id WHERE registered_players.player_id = ?", session["user_id"])
+
+    # get team rosters
+    for team in history:
+        team["players"] = db.execute("SELECT first_name, last_name, captain, accounts.id FROM accounts INNER JOIN registered_players ON accounts.id = registered_players.player_id WHERE team_id = ?", team["id"])
 
     return render_template("profile.html", id=session["user_id"], user=user, history=history)
 
 @app.route("/update", methods=["GET", "POST"])
+@login_required
 def update():
     """Update account information"""
 
@@ -472,4 +502,135 @@ def update():
         db.execute("UPDATE accounts SET gender = ? WHERE id = ?", gender, session["user_id"])
 
     flash("You have successfully updated your contact information.", "success")
+    return redirect("/profile")
+
+@app.route("/password", methods=["GET", "POST"])
+@login_required
+def password():
+    """Change Password"""
+
+    # User reaches page via GET
+    if request.method == "GET":
+        return render_template("password.html")
+
+    # User reaches page via POST
+    old_password = request.form.get("old_password")
+    new_password = request.form.get("new_password")
+    confirmation = request.form.get("confirmation")
+
+    old_hash = db.execute("SELECT password_hash FROM accounts WHERE id = ?", session["user_id"])
+
+    special_characters = ['$', '#', '@', '!', '*']
+
+    if not old_password:
+        flash("Must enter current password.", "error")
+        return redirect("/password")
+
+    if not new_password:
+        flash("Must enter new password.", "error")
+        return redirect("/password")
+
+    if not confirmation:
+        flash("Must confirm new password.", "error")
+        return redirect("/password")
+
+    # Validate password inputs
+    if not check_password_hash(old_hash[0]["password_hash"], old_password):
+        flash("Invalid current password.", "error")
+        return redirect("/password")
+
+    if new_password != confirmation:
+        flash("New passwords don't match.", "error")
+        return redirect("/password")
+
+    if len(new_password) < 8:
+        flash("Password must be at least 8 characters.", "error")
+        return redirect("/password")
+
+    if not any(i.isdigit() for i in new_password):
+        flash("Password must contain at least one number.", "error")
+        return redirect("/password")
+
+    if not any(j.isupper() for j in new_password):
+        flash("Password must contain at least one capital letter.", "error")
+        return redirect("/password")
+
+    if not any(k in special_characters for k in new_password):
+        flash("Password must contain at least one special character ($, #, @, !, *).", "error")
+        return redirect("/password")
+
+    db.execute("UPDATE accounts SET password_hash = ? WHERE id = ?", generate_password_hash(new_password), session["user_id"])
+
+    flash("Your password has been successfully updated.", "success")
+    return redirect("/profile")
+
+@app.route("/leave_team", methods=["POST"])
+@login_required
+def leave_team():
+    """Leave team"""
+
+    team_id = int(request.form.get("leave"))
+
+    team_name = db.execute("SELECT team_name FROM teams WHERE id = ?", team_id)
+
+    captain = db.execute("SELECT captain FROM registered_players WHERE player_id = ? AND team_id = ?", session["user_id"], team_id)
+
+    if captain[0]["captain"] == "Yes":
+        flash("Must designate alternative captain for %s before leaving team." % (team_name[0]["team_name"]), "error")
+        return redirect("/profile")
+
+    db.execute("DELETE FROM registered_players WHERE team_id = ? AND player_id = ?", team_id, session["user_id"])
+
+    flash("You have successfully left %s." % (team_name[0]["team_name"]), "success")
+    return redirect("/profile")
+
+@app.route("/de-register_team", methods=["POST"])
+@login_required
+def deregister_team():
+    """De-Register Team"""
+
+    # Get selected team
+    team_id = int(request.form.get("de-register"))
+
+    # Get event id
+    event_id = db.execute("SELECT event_id FROM teams WHERE id = ?", team_id)
+
+    # Get team name
+    team_name = db.execute("SELECT team_name FROM teams WHERE id = ?", team_id)
+
+    # Delete team from teams table in database
+    db.execute("DELETE FROM teams WHERE id = ?", team_id)
+
+    # Delete team roster from registered_players table
+    db.execute("DELETE FROM registered_players WHERE team_id = ?", team_id)
+
+    # Update spots_available in events table
+    db.execute("UPDATE events SET spots_available = spots_available + 1 WHERE id = ?", event_id[0]["event_id"])
+
+    flash("You have successfully de-registered %s." % (team_name[0]["team_name"]), "success")
+    return redirect("/profile")
+
+@app.route("/update_captain", methods=["POST"])
+@login_required
+def update_captain():
+    """Update Captain"""
+
+    team_id = int(request.form.get("team_id"))
+
+    new_captain = int(request.form.get("new_captain"))
+
+    if not new_captain:
+        flash("Must select a new captain.", "error")
+        redirect("/profile")
+
+    # Get team name
+    team_name = db.execute("SELECT team_name FROM teams WHERE id = ?", team_id)
+    
+    # Update old captain in registered players table
+    db.execute("UPDATE registered_players SET captain = 'No' WHERE player_id = ?", session["user_id"])
+
+    # Update new captain in registered players table
+    db.execute("UPDATE registered_players SET captain = 'Yes' WHERE player_id = ?", new_captain)
+
+    flash("You have successfully updated the captain for %s." % (team_name), "success")
     return redirect("/profile")

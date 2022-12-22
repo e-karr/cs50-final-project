@@ -15,21 +15,48 @@
                     <div class="col">
                         <h5>{{ event.event_name }}</h5>
                         <div>{{ event.month }} {{ event.day }}, {{ event.year }}; {{ event.time }}</div>
-                        <div><small>{{ event.location }}</small></div>
+                        <div>{{ event.location }}</div>
                     </div>
                     <div class="col text-end">
                         <small>{{ event.spots_available }} spots left / {{ event.number_teams }} total teams</small>
                         <div class="d-flex w-100 justify-content-end mt-3">
                             <div class="me-2"><button type="button" class="btn btn-kvkl" data-bs-toggle="modal" data-bs-target="#modal{{event.id}}">Sign Up</button></div>
-                            <div><button type="button" class="btn btn-kvkl" data-bs-toggle="collapse" data-bs-target="#collapse{{event.id}}" aria-expanded="false" aria-controls="collapseExample">Registered Teams</button></div>
+                            <div>
+                                <button type="button" value="{{ event.id }}" name="event_id" class="btn btn-kvkl" data-bs-toggle="collapse" data-bs-target="#collapse{{event.id}}" aria-expanded="false" aria-controls="collapseExample">Registered Teams</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="collapse" id="collapse{{event.id}}">
-                    <div class="card card-body">
-                        <ul>
-                            <li>placeholder for team name</li>
-                        </ul>
+                <div class="collapse mt-3" id="collapse{{event.id}}">
+                    <div>
+                        <h6 class="text-decoration-underline">Currently Registered Teams</h6>
+                        <ol>
+                            {% for team in event["teams"] %}
+                                <li>{{ team.team_name }} {% if team.sponsor %} (Sponsor: {{ team.sponsor }}) {% endif %}<button type="button" class="btn btn-link btn-sm" data-bs-toggle="modal" data-bs-target="#rosterModal{{team.id}}">Team Roster</button></li>
+
+                                <!-- Roster Modal -->
+                                <div class="modal fade" id="rosterModal{{team.id}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h1 class="modal-title fs-5" id="exampleModalLabel">Team Roster</h1>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body text-start">
+                                                <ul>
+                                                    {% for player in team["players"] %}
+                                                        <li>{{ player.first_name }} {{ player.last_name }} {% if player.captain == "Yes" %} (Captain) {% endif %}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </ol>
                     </div>
                   </div>
             </div>
