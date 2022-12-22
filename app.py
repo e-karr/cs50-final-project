@@ -632,5 +632,5 @@ def update_captain():
     # Update new captain in registered players table
     db.execute("UPDATE registered_players SET captain = 'Yes' WHERE player_id = ?", new_captain)
 
-    flash("You have successfully updated the captain for %s." % (team_name), "success")
+    flash("You have successfully updated the captain for %s." % (team_name[0]["team_name"]), "success")
     return redirect("/profile")
