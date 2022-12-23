@@ -22,7 +22,7 @@
             <select class="form-select" name="event">
                 <option disabled selected>Select Event...</option>
                 {% for event in events %}
-                <option value="{{ event.event_name }}">{{ event.event_name }}</option>
+                <option value="{{ event.id }}">{{ event.event_name }}</option>
                 {% endfor %}
             </select>
         </div>

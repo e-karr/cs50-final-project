@@ -26,9 +26,16 @@
             <select required class="form-select" name="team" id="team">
                 <option selected>Select Team...</option>
                 {% for team in teams %}
-                    <option value="{{ team.team_name }}">{{ team.team_name }}</option>
+                    <option value="{{ team.id }}">{{ team.team_name }}</option>
                 {% endfor %}
             </select>
+        </div>
+        <div class="col-sm-7 mx-auto mb-3">
+            <label>Are you a captain for the selected team?</label><br>
+            <input type="radio" name="captain" value="Yes" id="captainYes">
+            <label for="captainYes">Yes</label><br>
+            <input type="radio" name="captain" value="No" id="captainNo">
+            <label for="captainYes">No</label><br>
         </div>
         <div class="form-floating col-sm-7 mx-auto mb-3">
             <input type="text" class="form-control" id="floatingInput" placeholder="First name" name="firstname" value="{{ player[0].first_name }}">

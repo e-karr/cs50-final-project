@@ -208,7 +208,7 @@ def delete_account():
     db.execute("DELETE FROM accounts WHERE id = ?", session["user_id"])
 
     flash("Your account was successfully deleted.", "success")
-    logout()
+    session.clear()
     return redirect("/")
 
 @app.route("/team_register", methods=["GET", "POST"])
@@ -228,10 +228,12 @@ def team_register():
         return render_template("team_register.html", events=events, captain=captain)
 
     #User reached route via POST
+
+    # Generate random 6-digit passcode
     passcode = randint(100000, 999999)
     
     # Validate form inputs
-    event = request.form.get("event")
+    event_id = int(request.form.get("event"))
     team_name = request.form.get("teamname")
     sponsor = request.form.get("sponsor")
     first_name = request.form.get("firstname")
@@ -239,10 +241,7 @@ def team_register():
     phone_number = request.form.get("phonenumber")
     email = request.form.get("email")
 
-    # Get event ID
-    event_id = db.execute("SELECT id FROM events WHERE event_name = ?", event)
-
-    if not event:
+    if not event_id:
         flash("Must select an event.", "error")
         return redirect("/team_register")
 
@@ -270,24 +269,17 @@ def team_register():
         flash("Must enter an email.", "error")
         return redirect("/team_register")
 
-    if len(db.execute("SELECT team_name FROM teams WHERE team_name = ? AND event_id = ?", team_name, event_id[0]["id"])) != 0:
+    if len(db.execute("SELECT team_name FROM teams WHERE team_name = ? AND event_id = ?", team_name, event_id)) != 0:
         flash("This team is already registered", "error")
         return redirect("/team_register")
 
-    # Update user acccount information
-    if first_name != captain[0]["first_name"]:
-        db.execute("UPDATE accounts SET first_name = ? WHERE id = ?", first_name, session["user_id"])
+    # Check that player isn't already registered for event
+    event_name = db.execute("SELECT event_name FROM events WHERE id = ?", event_id)
+    if len(db.execute("SELECT * FROM registered_players WHERE player_id = ? AND event_id = ?", session["user_id"], event_id)) != 0:
+        flash("You are already registered for %s." % (event_name[0])["event_name"], "error")
+        return redirect("/team_register")
 
-    if last_name != captain[0]["last_name"]:
-        db.execute("UPDATE accounts SET last_name = ? WHERE id = ?", last_name, session["user_id"])
-
-    if phone_number != captain[0]["phone_number"]:
-        db.execute("UPDATE accounts SET phone_number = ? WHERE id = ?", phone_number, session["user_id"])
-
-    if email != captain[0]["email"]:
-        db.execute("UPDATE accounts SET email = ? WHERE id = ?", email, session["user_id"])
-
-    # Update account information, if necessary
+    # Update user acccount information, if necessary
     if first_name != captain[0]["first_name"]:
         db.execute("UPDATE accounts SET first_name = ? WHERE id = ?", first_name, session["user_id"])
 
@@ -301,15 +293,15 @@ def team_register():
         db.execute("UPDATE accounts SET email = ? WHERE id = ?", email, session["user_id"])
 
     # Insert into teams database and update spots available
-    db.execute("INSERT INTO teams (team_name, sponsor, event_id, passcode) VALUES (?, ?, ?, ?)", team_name, sponsor, event_id[0]["id"], passcode)
+    db.execute("INSERT INTO teams (team_name, sponsor, event_id, passcode) VALUES (?, ?, ?, ?)", team_name, sponsor, event_id, passcode)
 
-    db.execute("UPDATE events SET spots_available = spots_available - 1 WHERE id = ?", event_id[0]["id"])
+    db.execute("UPDATE events SET spots_available = spots_available - 1 WHERE id = ?", event_id)
 
     # Add captain to registered_players
-    team_id = db.execute("SELECT id FROM teams WHERE event_id = ? AND team_name = ?", event_id[0]["id"], team_name)
-    db.execute("INSERT INTO registered_players (captain, player_id, team_id) VALUES (?, ?, ?)", "Yes", session["user_id"], team_id[0]["id"])
+    team_id = db.execute("SELECT id FROM teams WHERE event_id = ? AND team_name = ?", event_id, team_name)
+    db.execute("INSERT INTO registered_players (captain, player_id, team_id, event_id) VALUES (?, ?, ?, ?)", "Yes", session["user_id"], team_id[0]["id"], event_id)
 
-    flash("You have successfully registered your team. Your team passcode is %d. This passcode will also be emailed to you" % (passcode), "success")
+    flash("You have successfully registered your team. Your team passcode is %d. This passcode is also available in your profile." % (passcode), "success")
     return redirect("/team_register")
 
 @app.route("/event_select", methods=["GET", "POST"])
@@ -335,10 +327,10 @@ def event_select():
         return redirect("/event_select")
 
     if event:
-            event_id = db.execute("SELECT id FROM events WHERE event_name = ?", event)
+        event_id = db.execute("SELECT id FROM events WHERE event_name = ?", event)
             
-            # Select teams registered for selected event
-            teams = db.execute("SELECT * FROM teams WHERE event_id = ?", event_id[0]["id"])
+        # Select teams registered for selected event
+        teams = db.execute("SELECT * FROM teams WHERE event_id = ?", event_id[0]["id"])
 
     return render_template("player_register.html", player=player, event=event, teams=teams)
         
@@ -368,12 +360,13 @@ def player_register():
 
     # Validate form inputs
     event = request.form.get("event")
-    team = request.form.get("team")
+    team_id = int(request.form.get("team"))
     first_name = request.form.get("firstname")
     last_name = request.form.get("lastname")
     phone_number = request.form.get("phonenumber")
     email = request.form.get("email")
     passcode = request.form.get("passcode")
+    captain = request.form.get("captain")
 
     if not event:
         flash("Must select an event.", "error")
@@ -381,17 +374,20 @@ def player_register():
 
     # Get event ID
     event_id = db.execute("SELECT id FROM events WHERE event_name = ?", event)
+    print(event_id)
+    
+    print(team_id)
 
-    if not team:
+    if not team_id:
         flash("Must select a team.", "error")
         return redirect("/event_select")
 
     # Get team ID
-    team_id = db.execute("SELECT id FROM teams WHERE event_id = ? AND team_name = ?", event_id[0]["id"], team)
+    #team_id = db.execute("SELECT id FROM teams WHERE event_id = ? AND team_name = ?", event_id[0]["id"], team)
 
     # Get team passcode
     
-    team_passcode = db.execute("SELECT passcode FROM teams WHERE id = ?", team_id[0]["id"])
+    team_passcode = db.execute("SELECT passcode FROM teams WHERE id = ?", team_id)
     team_passcode = int(team_passcode[0]["passcode"])
     print(team_passcode)
 
@@ -429,6 +425,11 @@ def player_register():
         flash("Invalid passcode.", "error")
         return redirect("/event_select")
 
+    # Check not already registered for event
+    if len(db.execute("SELECT * FROM registered_players WHERE player_id = ? AND event_id = ?", session["user_id"], event_id[0]["id"])) != 0:
+        flash("You are already registered for %s." % (event), "error")
+        return redirect("/event_select")
+
     # Update account information, if necessary
     if first_name != player[0]["first_name"]:
         db.execute("UPDATE accounts SET first_name = ? WHERE id = ?", first_name, session["user_id"])
@@ -443,9 +444,11 @@ def player_register():
         db.execute("UPDATE accounts SET email = ? WHERE id = ?", email, session["user_id"])
 
     # Update registered_players
-    db.execute("INSERT INTO registered_players (captain, player_id, team_id) VALUES (?, ?, ?)", "No", session["user_id"], team_id[0]["id"])
+    db.execute("INSERT INTO registered_players (captain, player_id, team_id, event_id) VALUES (?, ?, ?, ?)", captain, session["user_id"], team_id, event_id[0]["id"])
 
-    flash("You have successfully registered for %s." % (team), "success")
+    team_name = db.execute("SELECT team_name FROM teams WHERE id = ?", team_id)
+
+    flash("You have successfully registered for %s." % (team_name[0]["team_name"]), "success")
     return redirect("/profile")
     
 @app.route("/profile", methods=["GET", "POST"])

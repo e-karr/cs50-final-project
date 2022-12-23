@@ -4,12 +4,6 @@ body {
     color: white;
 }
 
-footer {
-    text-align: center;
-    color: white;
-    margin-top: 50px;
-}
-
 a.footer {
     all: unset;
 }
