@@ -1,5 +1,5 @@
 # KVKL Registration Web Application
-#### Video Demo:
+#### Video Demo: [CS50 Video Demo](https://www.youtube.com/watch?v=aeZm5W6CpK8)
 
 ## Table of Contents
 * [Introduction](#introduction)
