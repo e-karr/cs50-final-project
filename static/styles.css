@@ -74,5 +74,23 @@ div.modal-header, div.modal-body, div.collapse {
 }
 
 .invalid {
-    border: 1px solid red;
+    border: 3px solid red;
 }
+
+input:valid {
+    border: 3px solid green;
+}
+
+input:valid + label>.valid::after {
+    content: "✓";
+    color: darkgreen;
+    margin-left: 2px;
+    font-size: 1rem;
+}
+
+/* input:invalid + label>.valid::after {
+    content: "✖";
+    color: red;
+    margin-left: 2px;
+    font-size: 1rem;
+} */
