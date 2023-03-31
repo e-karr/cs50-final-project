@@ -3,11 +3,26 @@ const confirmPassword = document.querySelector("#confirm-password");
 const errorMessage = document.querySelector(".error-msg");
 
 const firstName = document.querySelector("#first-name");
+const lastName = document.querySelector("#last-name");
+const phoneNumber = document.querySelector("#phone-number");
+const email = document.querySelector("#email");
 
-firstName.addEventListener('blur', addInvalidBorder(firstName));
+// firstName.addEventListener('blur', addInvalidBorder(firstName));
 
 firstName.addEventListener('invalid', () => {
     firstName.setCustomValidity('Please enter your first name.');
+});
+
+lastName.addEventListener('invalid', () => {
+    lastName.setCustomValidity('Please enter your last name.');
+});
+
+phoneNumber.addEventListener('invalid', () => {
+    phoneNumber.setCustomValidity('Please enter a valid phone number.');
+});
+
+email.addEventListener('invalid', () => {
+    email.setCustomValidity('Please enter a valid email.');
 });
 
 confirmPassword.addEventListener('blur', () => {
@@ -22,6 +37,6 @@ confirmPassword.addEventListener('blur', () => {
     }
 });
 
-function addInvalidBorder(element) {
-    element.classList.add('invalid');
-}
+// function addInvalidBorder(element) {
+//     element.classList.add('invalid');
+// }
