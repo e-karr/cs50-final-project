@@ -8,41 +8,45 @@
 
     <h1 class="page-title">Create an Account</h1>
 
+    <p class="col-sm-7 mx-auto mb-3">All form fields are required.</p>
+
     <form action="/account" method="post">
         
         <div class="form-floating col-sm-7 mx-auto mb-3">
-            <input type="text" class="form-control" id="floatingInput" placeholder="First name" name="firstname">
-            <label for="floatingInput">First Name</label>
+            <input type="text" class="form-control" id="first-name" placeholder="First name" name="firstname" required>
+            <label for="first-name">First Name</label>
         </div>
         <div class="form-floating col-sm-7 mx-auto mb-3">
-            <input type="text" class="form-control" id="floatingInput" placeholder="Last name" name="lastname">
-            <label for="floatingInput">Last Name</label>
+            <input type="text" class="form-control" id="last-name" placeholder="Last name" name="lastname" required>
+            <label for="last-name">Last Name</label>
         </div>
         <div class="form-floating col-sm-7 mx-auto">
-            <input type="tel" class="form-control" id="floatingInput" placeholder="Phone number" name="phonenumber">
-            <label for="floatingInput">Phone Number</label>
+            <input type="tel" class="form-control" id="phone-number" placeholder="Phone number" name="phonenumber" required pattern="/^[0-9]+$/">
+            <label for="phone-number">Phone Number</label>
         </div>
         <div class="col-sm-7 mx-auto mb-3">
             <p>Numbers only.</p>
         </div>
         <div class="form-floating col-sm-7 mx-auto mb-3">
-            <input type="email" class="form-control" id="floatingInput" name="email" placeholder="Email">
-            <label for="floatingInput">Email</label>
+            <input type="email" class="form-control" id="email" name="email" placeholder="Email" required>
+            <label for="email">Email</label>
         </div>
         <div class="form-floating col-sm-7 mx-auto">
-            <input type="password" class="form-control" id="floatingInput" name="password" placeholder="Password">
-            <label for="floatingInput">Password</label>
+            <input type="password" class="form-control" id="password" name="password" placeholder="Password" required pattern="(?=^.{8,}$)(?=.*\d)(?=.*[$|#|@|!|*])(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$"> 
+            <label for="password">Password</label>
         </div>
         <div class="col-sm-7 mx-auto mb-3">
-            <p>Password must contain at least 8 characters, 1 capital letter, 1 number, and 1 special character ($, #, @, !, *).</p>
+            <p>Password must contain at least 8 characters, 1 capital letter, 1 number, and 1 special character ($, #, @, !, or *).</p>
         </div>
         <div class="form-floating col-sm-7 mx-auto mb-3">
-            <input type="password" class="form-control" id="floatingInput" name="confirmation" placeholder="Confirm Password">
-            <label for="floatingInput">Confirm Password</label>
+            <input type="password" class="form-control" id="confirm-password" name="confirmation" placeholder="Confirm Password" required>
+            <label for="confirm-password">Confirm Password</label>
+            <div class="error-msg"></div>
         </div>
         <div class="col-sm-7 mx-auto mb-3">
-            <select class="form-select" name="gender">
-              <option disabled selected>Select Gender...</option>
+            <label for="gender">Select Gender</label>
+            <select class="form-select" name="gender" id="gender" required>
+              <option disabled selected>Select...</option>
               <option>Male</option>
               <option>Female</option>
               <option>Non-Binary</option>
