@@ -7,7 +7,13 @@ const lastName = document.querySelector("#last-name");
 const phoneNumber = document.querySelector("#phone-number");
 const email = document.querySelector("#email");
 
-// firstName.addEventListener('blur', addInvalidBorder(firstName));
+// let firstNameCounter = 0;
+
+// firstName.addEventListener('focus', () => {
+//     firstNameCounter++;
+// })
+
+// firstName.addEventListener('focusout', addInvalidBorder(firstName));
 
 firstName.addEventListener('invalid', () => {
     firstName.setCustomValidity('Please enter your first name.');
@@ -38,5 +44,7 @@ confirmPassword.addEventListener('blur', () => {
 });
 
 // function addInvalidBorder(element) {
-//     element.classList.add('invalid');
+//     if (firstNameCounter > 0) {
+//         element.classList.add('invalid');
+//     }
 // }
