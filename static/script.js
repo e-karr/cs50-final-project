@@ -6,6 +6,10 @@ const firstName = document.querySelector("#first-name");
 const lastName = document.querySelector("#last-name");
 const phoneNumber = document.querySelector("#phone-number");
 const email = document.querySelector("#email");
+const gender = document.querySelector("#gender");
+const genderLabel = document.querySelector("label[for=gender]");
+
+const createAccount = document.querySelector("#create-account");
 
 firstName.addEventListener('focus', addInvalidClass(firstName));
 
@@ -18,6 +22,28 @@ email.addEventListener('focus', addInvalidClass(email));
 newPassword.addEventListener('focus', addInvalidClass(newPassword));
 
 confirmPassword.addEventListener('focus', addInvalidClass(confirmPassword));
+
+gender.addEventListener('focus', () => {
+    if (gender.value === "Select...") {
+        addInvalidClass(gender);
+        genderLabel.classList.add('invalid-select');
+    }
+});
+
+gender.addEventListener('change', () => {
+    if (gender.value !== "Select...") {
+        gender.style.border = "3px solid green";
+        genderLabel.classList.remove('invalid-select');
+        genderLabel.classList.add('valid-select');
+    }
+});
+
+createAccount.addEventListener('click', () => {
+    if (gender.value === "Select...") {
+        gender.setCustomValidity('Please select a gender.');
+        genderLabel.classList.add('invalid-select');
+    }
+});
 
 firstName.addEventListener('invalid', () => {
     firstName.setCustomValidity('Please enter your first name.');
