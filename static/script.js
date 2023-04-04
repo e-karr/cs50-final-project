@@ -7,13 +7,17 @@ const lastName = document.querySelector("#last-name");
 const phoneNumber = document.querySelector("#phone-number");
 const email = document.querySelector("#email");
 
-// let firstNameCounter = 0;
+firstName.addEventListener('focus', addInvalidClass(firstName));
 
-// firstName.addEventListener('focus', () => {
-//     firstNameCounter++;
-// })
+lastName.addEventListener('focus', addInvalidClass(lastName));
 
-// firstName.addEventListener('focusout', addInvalidBorder(firstName));
+phoneNumber.addEventListener('focus', addInvalidClass(phoneNumber));
+
+email.addEventListener('focus', addInvalidClass(email));
+
+newPassword.addEventListener('focus', addInvalidClass(newPassword));
+
+confirmPassword.addEventListener('focus', addInvalidClass(confirmPassword));
 
 firstName.addEventListener('invalid', () => {
     firstName.setCustomValidity('Please enter your first name.');
@@ -31,6 +35,14 @@ email.addEventListener('invalid', () => {
     email.setCustomValidity('Please enter a valid email.');
 });
 
+newPassword.addEventListener('invalid', () => {
+    newPassword.setCustomValidity('Please enter a valid password.');
+});
+
+confirmPassword.addEventListener('invalid', () => {
+    confirmPassword.setCustomValidity('Please confirm password.');
+});
+
 confirmPassword.addEventListener('blur', () => {
     if (newPassword.value !== confirmPassword.value) {
         newPassword.classList.add('invalid');
@@ -43,8 +55,8 @@ confirmPassword.addEventListener('blur', () => {
     }
 });
 
-// function addInvalidBorder(element) {
-//     if (firstNameCounter > 0) {
-//         element.classList.add('invalid');
-//     }
-// }
+function addInvalidClass(element) {
+    element.addEventListener('focusout', () => {
+        element.classList.add('invalid');
+    });
+}

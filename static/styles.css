@@ -88,7 +88,7 @@ input:valid + label>.status::after {
     font-size: 1rem;
 }
 
-.invalid:invalid + label>.valid::after {
+.invalid:invalid + label>.status::after {
     content: "✖";
     color: red;
     margin-left: 2px;
