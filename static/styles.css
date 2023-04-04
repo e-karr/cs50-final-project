@@ -67,6 +67,10 @@ div.modal-header, div.modal-body, div.collapse {
     border-radius: 5px;
 }
 
+.error-msg {
+    height: 1rem;
+}
+
 .no-match::before {
     content: "* Passwords do not match";
     font-size: 1rem;

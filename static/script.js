@@ -43,7 +43,16 @@ confirmPassword.addEventListener('invalid', () => {
     confirmPassword.setCustomValidity('Please confirm password.');
 });
 
-confirmPassword.addEventListener('blur', () => {
+newPassword.addEventListener('blur', checkPasswordMatch);
+confirmPassword.addEventListener('blur', checkPasswordMatch);
+
+function addInvalidClass(element) {
+    element.addEventListener('focusout', () => {
+        element.classList.add('invalid');
+    });
+}
+
+function checkPasswordMatch() {
     if (newPassword.value !== confirmPassword.value) {
         newPassword.classList.add('invalid');
         confirmPassword.classList.add('invalid');
@@ -53,10 +62,4 @@ confirmPassword.addEventListener('blur', () => {
         confirmPassword.classList.remove('invalid');
         errorMessage.classList.remove('no-match');
     }
-});
-
-function addInvalidClass(element) {
-    element.addEventListener('focusout', () => {
-        element.classList.add('invalid');
-    });
 }
