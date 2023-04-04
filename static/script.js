@@ -41,7 +41,6 @@ gender.addEventListener('change', () => {
 createAccount.addEventListener('click', () => {
     if (gender.value === "Select...") {
         gender.setCustomValidity('Please select a gender.');
-        genderLabel.classList.add('invalid-select');
     }
 });
 
