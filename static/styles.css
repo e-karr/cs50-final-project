@@ -66,3 +66,35 @@ div.modal-header, div.modal-body, div.collapse {
     margin-right: 300px;
     border-radius: 5px;
 }
+
+.error-msg {
+    height: 1rem;
+}
+
+.no-match::before {
+    content: "* Passwords do not match";
+    font-size: 1rem;
+    color: red;
+}
+
+.invalid {
+    border: 3px solid red;
+}
+
+input:valid {
+    border: 3px solid green;
+}
+
+input:valid + label>.status::after, .valid-select::after {
+    content: "✓";
+    color: green;
+    margin-left: 2px;
+    font-size: 1rem;
+}
+
+.invalid:invalid + label>.status::after, .invalid-select::after {
+    content: "✖";
+    color: red;
+    margin-left: 2px;
+    font-size: 1rem;
+}
