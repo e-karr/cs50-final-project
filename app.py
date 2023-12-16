@@ -5,17 +5,38 @@ from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 from random import randint
 from functools import wraps
+import os
 
-# Configure application
-app = Flask(__name__)
+from db_handler import DatabaseHandler
+from user_handler import UserHandler
+from team_handler import TeamHandler
+from event_handler import EventHandler
 
-app.config["TEMPLATES_AUTO_RELOAD"] = True
-app.config["SESSION_PERMANENT"] = False
-app.config["SESSION_TYPE"] = "filesystem"
-Session(app)
+
+def create_app():
+    # Configure application
+    app = Flask(__name__)
+
+    app.config["TEMPLATES_AUTO_RELOAD"] = True
+    app.config["SESSION_PERMANENT"] = False
+    app.config["SESSION_TYPE"] = "filesystem"
+    Session(app)
+
+    # ensure instance folder exists
+    try:
+        os.makedirs(app.instance_path)
+    except OSError:
+        pass
+
+    return app
 
 # Configure CS50 Library to use SQLite database
 db = SQL("sqlite:///kvkl_registration.db")
+
+db_handler = DatabaseHandler("sqlite:///kvkl_registration.db")
+user_handler = UserHandler(db_handler)
+team_handler = TeamHandler(db_handler)
+event_handler = EventHandler(db_handler)
 
 def login_required(f):
     """
