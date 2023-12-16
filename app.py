@@ -793,14 +793,16 @@ def update_captain():
     # Update old captain in registered players table
     db.execute("""UPDATE registered_players 
                   SET captain = 'No' 
-                  WHERE player_id = ?""", 
-                  session["user_id"])
+                  WHERE player_id = ?
+                  AND team_id = ?""", 
+                  session["user_id"], team_id)
 
     # Update new captain in registered players table
     db.execute("""UPDATE registered_players 
                   SET captain = 'Yes' 
-                  WHERE player_id = ?""", 
-                  new_captain)
+                  WHERE player_id = ?
+                  AND team_id = ?""", 
+                  new_captain, team_id)
 
     flash("You have successfully updated the captain for %s." % (team_name[0]["team_name"]), "success")
     return redirect("/profile")
