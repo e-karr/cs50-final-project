@@ -5,7 +5,7 @@ DROP TABLE IF EXISTS registered_players;
 
 CREATE TABLE accounts (
     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-    email TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
     phone_number NUMERIC NOT NULL,

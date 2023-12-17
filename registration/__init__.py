@@ -6,6 +6,8 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from random import randint
 from functools import wraps
 import os
+from registration.db import get_db
+from . import auth
 
 # from db_handler import DatabaseHandler
 # from user_handler import UserHandler
@@ -35,9 +37,33 @@ def create_app():
     from . import db
     db.init_app(app)
 
-    @app.route('/hello')
-    def hello():
-        return 'Hello, World!'
+    @app.route("/", methods=["GET"])
+    def index():
+        """Generate homepage with list of events"""
+        db = get_db()
+        # Generate list of events
+        events = db.execute("SELECT * FROM events")
+
+        # Get teams signed up for events
+        for event in events:
+            event["teams"] = db.execute("""SELECT team_name, id, sponsor 
+                                            FROM teams where event_id = ?""", 
+                                            event["id"])
+
+        for event in events:
+            for team in event["teams"]:
+                team["players"] = db.execute("""SELECT first_name, last_name, accounts.id, captain 
+                                                FROM accounts 
+                                                INNER JOIN registered_players 
+                                                ON accounts.id = registered_players.player_id 
+                                                WHERE team_id = ?""", 
+                                                team["id"])
+
+        # Show homepage
+        return render_template("index.html", events=events)
+    
+    
+    app.register_blueprint(auth.bp)
 
     return app
 
@@ -49,191 +75,6 @@ def create_app():
 # team_handler = TeamHandler(db_handler)
 # event_handler = EventHandler(db_handler)
 
-# def login_required(f):
-#     """
-#     Decorate routes to require login.
-
-#     https://flask.palletsprojects.com/en/1.1.x/patterns/viewdecorators/
-#     """
-#     @wraps(f)
-#     def decorated_function(*args, **kwargs):
-#         if session.get("user_id") is None:
-#             return redirect("/login")
-#         return f(*args, **kwargs)
-#     return decorated_function
-
-# @app.route("/", methods=["GET"])
-# def index():
-#     """Generate homepage with list of events"""
-
-#     # Generate list of events
-#     events = db.execute("SELECT * FROM events")
-
-#     # Get teams signed up for events
-#     for event in events:
-#         event["teams"] = db.execute("""SELECT team_name, id, sponsor 
-#                                         FROM teams where event_id = ?""", 
-#                                         event["id"])
-
-#     for event in events:
-#         for team in event["teams"]:
-#             team["players"] = db.execute("""SELECT first_name, last_name, accounts.id, captain 
-#                                             FROM accounts 
-#                                             INNER JOIN registered_players 
-#                                             ON accounts.id = registered_players.player_id 
-#                                             WHERE team_id = ?""", 
-#                                             team["id"])
-
-#     # Show homepage
-#     return render_template("index.html", events=events)
-
-# @app.route("/account", methods=["GET", "POST"])
-# def account():
-#     """Create a new account"""
-    
-#     # show create an account page
-#     if request.method == "GET":
-#         return render_template("account.html")
-
-#     # get input from create account form
-#     email = request.form.get("email")
-#     password = request.form.get("password")
-#     confirmation = request.form.get("confirmation")
-#     first_name = request.form.get("firstname")
-#     last_name = request.form.get("lastname")
-#     phone_number = request.form.get("phonenumber")
-#     gender = request.form.get("gender")
-
-#     special_characters = ['$', '#', '@', '!', '*']
-
-#     # Validate first name
-#     if not first_name:
-#         flash("Must enter first name", "error")
-#         return redirect("/account")
-
-#     # Validate last name
-#     if not last_name:
-#         flash("Must enter last name", "error")
-#         return redirect("/account")
-
-#     # Validate phone number
-#     if not phone_number:
-#         flash("Must enter phone number", "error")
-#         return redirect("/account")
-
-#     if not phone_number.isdigit():
-#         flash("Phone number must only contain numbers.", "error")
-#         return redirect("/account")
-    
-#     # Validate email
-#     if not email:
-#         flash("Must enter an email.", "error")
-#         return redirect("/account")
-
-#     if len(db.execute("SELECT email FROM accounts WHERE email = ?", email)) != 0:
-#         flash("Account already exists using this email", "error")
-#         return redirect("/account")
-
-#     # Validate password - Password must contain at least 8 characters, 1 capital letter, 1 number, and 1 special character.
-#     if not password:
-#         flash("Must enter a password.", "error")
-#         return redirect("/account")
-
-#     if not confirmation:
-#         flash("Must confirm password.", "error")
-#         return redirect("/account")
-
-#     if password != confirmation:
-#         flash("Passwords don't match.", "error")
-#         return redirect("/account")
-
-#     if len(password) < 8:
-#         flash("Password must be at least 8 characters.", "error")
-#         return redirect("/account")
-
-#     if not any(i.isdigit() for i in password):
-#         flash("Password must contain at least one number.", "error")
-#         return redirect("/account")
-
-#     if not any(j.isupper() for j in password):
-#         flash("Password must contain at least one capital letter.", "error")
-#         return redirect("/account")
-
-#     if not any(k in special_characters for k in password):
-#         flash("Password must contain at least one special character ($, #, @, !, *).", "error")
-#         return redirect("/account")
-
-#     # Validate gender
-#     if not gender:
-#         flash("Must select a gender", "error")
-#         return redirect("/account")
-    
-#     # Remember new account
-#     db.execute("""INSERT INTO accounts (email, first_name, last_name, phone_number, password_hash, gender) 
-#                   VALUES (?, ?, ?, ?, ?, ?)""", 
-#                   email, first_name, last_name, phone_number, generate_password_hash(password), gender)
-
-#     # Log new user in
-#     user = db.execute("SELECT id FROM accounts WHERE email = ?", email)
-#     session["user_id"] = user[0]["id"]
-
-#     flash("You have successfully created an account.", "success")
-#     return redirect("/")
-
-# @app.route("/login", methods=["GET", "POST"])
-# def login():
-#     """Log user in"""
-
-#     # User reached route via POST
-#     if request.method == "POST": 
-
-#         # Get input values
-#         email = request.form.get("email")
-#         password = request.form.get("password")
-        
-#         # Check that email was entered
-#         if not email:
-#             flash("Please enter an email.", "error")
-#             return redirect("/login")
-
-#         # Check that password was entered
-#         if not password:
-#             flash("Please enter a password.", "error")
-#             return redirect("/login")
-
-#         # Query database for username
-#         rows = db.execute("SELECT * FROM accounts WHERE email = ?", email)
-
-#         # Check for valid email
-#         if len(rows) != 1:
-#             flash("Invalid email", "error")
-#             return redirect("/login")
-
-#         if not check_password_hash(rows[0]["password_hash"], password):
-#             flash("Invalid password.", "error")
-#             return redirect("/login")
-
-#         # Remember which user has logged in
-#         session["user_id"] = rows[0]["id"]
-
-#         # Redirect user to home page
-#         return redirect("/")
-
-#     # User reached route via GET
-#     else:
-#         return render_template("login.html")
-
-# @app.route("/logout")
-# @login_required
-# def logout():
-#     """Log user out"""
-
-#     # Forget any user_id
-#     session.clear()
-
-#     # Redirect user to homepage
-#     flash("You have successfully logged out.", "success")
-#     return redirect("/")
 
 # @app.route("/delete_account", methods=["POST"])
 # @login_required
