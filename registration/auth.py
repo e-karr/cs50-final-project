@@ -94,7 +94,8 @@ def login():
             error = "Please enter a password."
 
         # Query database for username
-        user = db.execute("SELECT * FROM accounts WHERE email = ?", email,).fetchone()
+        user = db.execute("SELECT * FROM accounts WHERE email = ?", (email,)).fetchone()
+        print(user)
 
         # Check for valid email and password
         if user is None:
