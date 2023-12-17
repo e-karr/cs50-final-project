@@ -31,31 +31,35 @@
                     <div>
                         <h6 class="text-decoration-underline">Currently Registered Teams</h6>
                         <ol>
-                            {% for team in event["teams"] %}
-                                <li>{{ team.team_name }} {% if team.sponsor %} (Sponsor: {{ team.sponsor }}) {% endif %}<button type="button" class="btn btn-link btn-sm" data-bs-toggle="modal" data-bs-target="#rosterModal{{team.id}}">Team Roster</button></li>
+                            {% if event.teams %}
+                                {% for team in event.teams %}
+                                    <li>{{ team.team_name }} {% if team.sponsor %} (Sponsor: {{ team.sponsor }}) {% endif %}<button type="button" class="btn btn-link btn-sm" data-bs-toggle="modal" data-bs-target="#rosterModal{{team.id}}">Team Roster</button></li>
 
-                                <!-- Roster Modal -->
-                                <div class="modal fade" id="rosterModal{{team.id}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog modal-dialog-centered">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h1 class="modal-title fs-5" id="exampleModalLabel">{{ team.team_name }} Team Roster</h1>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body text-start">
-                                                <ul>
-                                                    {% for player in team["players"] %}
-                                                        <li>{{ player.first_name }} {{ player.last_name }} {% if player.captain == "Yes" %} (Captain) {% endif %}</li>
-                                                    {% endfor %}
-                                                </ul>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    <!-- Roster Modal -->
+                                    <div class="modal fade" id="rosterModal{{team.id}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h1 class="modal-title fs-5" id="exampleModalLabel">{{ team.team_name }} Team Roster</h1>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body text-start">
+                                                    <ul>
+                                                        {% if team.players %}
+                                                            {% for player in team.players %}
+                                                                <li>{{ player.first_name }} {{ player.last_name }} {% if player.captain == "Yes" %} (Captain) {% endif %}</li>
+                                                            {% endfor %}
+                                                        {% endif %}
+                                                    </ul>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            {% endfor %}
+                                {% endfor %}
+                            {% endif %}
                         </ol>
                     </div>
                   </div>

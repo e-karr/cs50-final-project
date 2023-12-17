@@ -1,19 +1,16 @@
 import functools
-
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, session, url_for
 )
-
 from werkzeug.security import check_password_hash, generate_password_hash
+from .db import Account, db
 
-from registration.db import get_db
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 @bp.route("/register", methods=("GET", "POST"))
 def register():
     """Create a new account"""
-
     if request.method == "POST":
         # get input from create account form
         email = request.form.get("email")
@@ -26,7 +23,6 @@ def register():
 
         special_characters = ['$', '#', '@', '!', '*']
 
-        db = get_db()
         error = None
 
         # validate form input
@@ -59,33 +55,42 @@ def register():
 
         if error is None:
             try:
-                db.execute("""INSERT INTO accounts (email, first_name, last_name, phone_number, password_hash, gender) 
-                    VALUES (?, ?, ?, ?, ?, ?)""", 
-                    (email, first_name, last_name, phone_number, generate_password_hash(password), gender))
-            except db.IntegrityError:
-                error = f"Email {email} is already registered"
-            else:
-                # Log new user in
-                user = db.execute("SELECT id FROM accounts WHERE email = ?", (email,)).fetchone()
-                session["user_id"] = user["id"]
-                flash("You have successfully created an account.", "success")
-                return redirect(url_for('index'))
-        
+                # Check if the email is already taken
+                existing_account = Account.query.filter_by(email=email).first()
+                if existing_account:
+                    error = "Email is already taken. Please choose a different email."
+                else:
+                    account = Account(
+                        email=email,
+                        first_name=first_name,
+                        last_name=last_name,
+                        phone_number=phone_number,
+                        password_hash=generate_password_hash(password),
+                        gender=gender
+                    )
+                    db.session.add(account)
+                    db.session.commit()
+                    flash("You have successfully created an account.", "success")
+                    return redirect(url_for('auth.login'))
+            except Exception as e:
+                print(f"Error during registration: {e}")
+                error = "An error occurred during registration"
+                db.session.rollback()
+            finally:
+                db.session.close()
+
         flash(error, "error")
-    
+
     return render_template("auth/register.html")
-    
-@bp.route("/login", methods=["GET", "POST"])
+
+@bp.route("/login", methods=("GET", "POST"))
 def login():
     """Log user in"""
-
     # User reached route via POST
-    if request.method == "POST": 
-
+    if request.method == "POST":
         # Get input values
         email = request.form.get("email")
         password = request.form.get("password")
-        db = get_db()
         error = None
 
         if not email:
@@ -93,25 +98,29 @@ def login():
         elif not password:
             error = "Please enter a password."
 
-        # Query database for username
-        user = db.execute("SELECT * FROM accounts WHERE email = ?", (email,)).fetchone()
-        print(user)
-
-        # Check for valid email and password
-        if user is None:
-            error = "Invalid email"
-        elif not check_password_hash(user["password_hash"], password):
-            error = "Invalid password."
-
         if error is None:
-            session.clear()
-            session["user_id"] = user["id"]
-            flash("Successful login", "success")
-            return redirect(url_for('index'))
-        
+            try:
+                user = Account.query.filter_by(email=email).first()
+
+                # Check for valid email and password
+                if user is None:
+                    error = "Invalid email"
+                elif not check_password_hash(user.password_hash, password):
+                    error = "Invalid password."
+
+                if error is None:
+                    session.clear()
+                    session["user_id"] = user.id
+                    flash("Successful login", "success")
+                    return redirect(url_for('index'))
+            except Exception as e:
+                print(f"Error during login: {e}")
+                error = "An error occurred during login"
+            finally:
+                db.session.close()
+
         flash(error, "error")
 
-    # User reached route via GET
     return render_template("auth/login.html")
 
 @bp.before_app_request
@@ -121,9 +130,7 @@ def load_logged_in_user():
     if user_id is None:
         g.user = None
     else:
-        g.user = get_db().execute(
-            "SELECT * FROM accounts WHERE id = ?", (user_id,)
-        ).fetchone()
+        g.user = Account.query.filter_by(id=user_id).first()
 
 @bp.route("/logout")
 def logout():
@@ -135,7 +142,7 @@ def logout():
 def login_required(view):
     @functools.wraps(view)
     def decorated_function(*args, **kwargs):
-        if g.User is None:
+        if g.user is None:
             return redirect(url_for('auth.login'))
         return view(*args, **kwargs)
     return decorated_function

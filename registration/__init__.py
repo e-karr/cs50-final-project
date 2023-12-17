@@ -1,79 +1,54 @@
-from cs50 import SQL
-from flask import Flask, flash, redirect, render_template, request, session, url_for
-from flask_login import login_required
-from flask_session import Session
-from werkzeug.security import check_password_hash, generate_password_hash
+from flask import Flask, render_template
+from flask_sqlalchemy import SQLAlchemy
 from random import randint
-from functools import wraps
-import os
-from registration.db import get_db
 from . import auth
-
-# from db_handler import DatabaseHandler
-# from user_handler import UserHandler
-# from team_handler import TeamHandler
-# from event_handler import EventHandler
-
+from .db import Event, Team, Player, Account, init_db
 
 def create_app():
     # Configure application
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY='dev',
-        DATABASE=os.path.join(app.instance_path, 'registration.sqlite')
+        SQLALCHEMY_DATABASE_URI='sqlite:////Users/elizabethkarr/cs50/project/registration/kvkl_registration.db',
+        SQLALCHEMY_TRACK_MODIFICATIONS=False,
+        TEMPLATES_AUTO_RELOAD=True,
+        SESSION_PERMANENT=False,
+        SESSION_TYPE="filesystem"
     )
 
-    app.config["TEMPLATES_AUTO_RELOAD"] = True
-    app.config["SESSION_PERMANENT"] = False
-    app.config["SESSION_TYPE"] = "filesystem"
-    Session(app)
+    # Initialize Flask SQLAlchemy
+    engine, Session, metadata = init_db(app)
 
-    # ensure instance folder exists
-    try:
-        os.makedirs(app.instance_path)
-    except OSError:
-        pass
-
-    from . import db
-    db.init_app(app)
+    app.register_blueprint(auth.bp)
 
     @app.route("/", methods=["GET"])
     def index():
         """Generate homepage with list of events"""
-        db = get_db()
-        # Generate list of events
-        events = db.execute("SELECT * FROM events")
+        events = []
 
-        # Get teams signed up for events
-        for event in events:
-            event["teams"] = db.execute("""SELECT team_name, id, sponsor 
-                                            FROM teams where event_id = ?""", 
-                                            event["id"])
+        try:
+            # Generate list of events
+            events = Event.query.all()
 
-        for event in events:
-            for team in event["teams"]:
-                team["players"] = db.execute("""SELECT first_name, last_name, accounts.id, captain 
-                                                FROM accounts 
-                                                INNER JOIN registered_players 
-                                                ON accounts.id = registered_players.player_id 
-                                                WHERE team_id = ?""", 
-                                                team["id"])
+            # Get teams signed up for events
+            for event in events:
+                event.teams = Team.query.filter_by(event_id=event.id).all()
+
+            for event in events:
+                for team in event.teams:
+                    with Session() as session:
+                        team.players = (session.query(Account.first_name, Account.last_name, Account.id, Player.captain)
+                                        .join(Player, Player.player_id == Account.id)
+                                        .filter(Player.team_id == team.id)
+                                        .all()
+                    )
+        except Exception as e:
+            print(f"An error occurred: {e}")
 
         # Show homepage
         return render_template("index.html", events=events)
     
-    
-    app.register_blueprint(auth.bp)
-
     return app
-
-# # Configure CS50 Library to use SQLite database
-# db = SQL("sqlite:///kvkl_registration.db")
-
-# db_handler = DatabaseHandler("sqlite:///kvkl_registration.db")
-# user_handler = UserHandler(db_handler)
-# team_handler = TeamHandler(db_handler)
-# event_handler = EventHandler(db_handler)
 
 
 # @app.route("/delete_account", methods=["POST"])
