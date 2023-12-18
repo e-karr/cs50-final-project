@@ -1,10 +1,9 @@
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, session, url_for
+    Blueprint, flash, g, redirect, render_template, request, url_for
 )
-from sqlalchemy import update
-from .db import db
+
 from .auth import login_required
-from .account import Account
+from .models.account import Account
 
 
 bp = Blueprint('user', __name__, url_prefix='/user')
@@ -12,6 +11,7 @@ bp = Blueprint('user', __name__, url_prefix='/user')
 @bp.route("/profile", methods=("GET", "POST"))
 @login_required
 def profile():
+    from .db import db
     """Show user profile"""
 
     # get logged in user id
@@ -27,10 +27,10 @@ def profile():
     return render_template("user/profile.html", id=user.id, user=user, history=history)
 
 
-# TODO user update profile
 @bp.route("/update", methods=("GET", "POST"))
 @login_required
 def update():
+    from .db import db
     """Update account information"""
 
     # Get current user information

@@ -3,13 +3,13 @@ from flask import (
     Blueprint, flash, g, redirect, render_template, request, session, url_for
 )
 from werkzeug.security import check_password_hash, generate_password_hash
-from .db import db
-from .account import Account
+from .models.account import Account
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 @bp.route("/register", methods=("GET", "POST"))
 def register():
+    from .db import db
     """Create a new account"""
     if request.method == "POST":
         # get input from create account form
@@ -85,6 +85,7 @@ def register():
 
 @bp.route("/login", methods=("GET", "POST"))
 def login():
+    from .db import db
     """Log user in"""
     # User reached route via POST
     if request.method == "POST":
@@ -125,6 +126,7 @@ def login():
 
 @bp.before_app_request
 def load_logged_in_user():
+    from .db import db
     user_id = session.get('user_id')
 
     if user_id is None:

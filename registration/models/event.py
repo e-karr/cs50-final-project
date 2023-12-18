@@ -1,9 +1,10 @@
-from .db import Base
+from ..db import Base
 from sqlalchemy import Column, Integer, String
 
 
 class Event(Base):
     __tablename__ = 'events'
+    __table_args__ = {'extend_existing': True}
     
     id = Column(Integer, primary_key=True, autoincrement=True)
     event_name = Column(String, nullable=False)

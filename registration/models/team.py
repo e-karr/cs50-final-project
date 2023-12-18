@@ -1,8 +1,9 @@
-from .db import Base
+from ..db import Base
 from sqlalchemy import Column, Integer, String, ForeignKey
 
 class Team(Base):
     __tablename__ = 'teams'
+    __table_args__ = {'extend_existing': True}
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     team_name = Column(String, nullable=False)

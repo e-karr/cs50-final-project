@@ -1,9 +1,10 @@
-from .db import Base
+from ..db import Base
 from sqlalchemy import Column, Integer, String, update
 
 
 class Account(Base):
     __tablename__ = 'accounts'
+    __table_args__ = {'extend_existing': True}
 
     id = Column(Integer, primary_key=True, autoincrement=True, unique=True)
     email = Column(String, unique=True, nullable=False)
@@ -90,3 +91,5 @@ class Account(Base):
                             .filter(Player.player_id == self.id)
                             .all())
         return history
+    
+    # TODO verify password requirements

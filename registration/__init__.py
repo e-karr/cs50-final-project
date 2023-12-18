@@ -4,10 +4,10 @@ from random import randint
 
 
 def create_app():
-    from .event import Event
+    from .models.event import Event
     from . import auth, user
     from .db import init_db
-    
+
     # Configure application
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(

@@ -15,4 +15,3 @@ def init_db(app):
     Base.metadata.reflect(bind=engine)
 
     return engine, Session, metadata
-
