@@ -56,7 +56,7 @@ def register():
         if error is None:
             try:
                 # Check if the email is already taken
-                existing_account = Account.query.filter_by(email=email).first()
+                existing_account = Account.get_user_by_email(db.session, email)
                 if existing_account:
                     error = "Email is already taken. Please choose a different email."
                 else:
@@ -100,7 +100,7 @@ def login():
 
         if error is None:
             try:
-                user = Account.query.filter_by(email=email).first()
+                user = Account.get_user_by_email(db.session, email)
 
                 # Check for valid email and password
                 if user is None:
@@ -130,7 +130,7 @@ def load_logged_in_user():
     if user_id is None:
         g.user = None
     else:
-        g.user = Account.query.filter_by(id=user_id).first()
+        g.user = Account.get_user_by_id(db.session, user_id)
 
 @bp.route("/logout")
 def logout():

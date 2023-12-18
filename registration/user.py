@@ -17,32 +17,11 @@ def profile():
     user= g.user
 
     # get registration history
-    history = (db.session.query(Event.event_name, 
-                                Event.month, 
-                                Event.day, 
-                                Event.time, 
-                                Event.location, 
-                                Team.team_name, 
-                                Team.passcode, 
-                                Player.captain, 
-                                Team.id
-                            )
-                            .join(Team, Team.event_id == Event.id)
-                            .join(Player, Player.team_id == Team.id)
-                            .filter(Player.player_id == user.id)
-                            .all()
-    )
+    history = user.get_registration_history(db.session)
 
     # get team rosters
     for team in history:
-        team.players = (session.query(Account.first_name, 
-                                                      Account.last_name, 
-                                                      Account.id, 
-                                                      Player.captain)
-                                        .join(Player, Player.player_id == Account.id)
-                                        .filter(Player.team_id == team.id)
-                                        .all()
-        )
+        team.players = team.get_roster(db.session)
 
     return render_template("user/profile.html", id=user.id, user=user, history=history)
 

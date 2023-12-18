@@ -32,19 +32,13 @@ def create_app():
 
             # Get teams signed up for events
             for event in events:
-                event.teams = Team.query.filter_by(event_id=event.id).all()
+                with Session() as session:
+                    event.teams = event.get_teams(session)
 
             for event in events:
                 for team in event.teams:
                     with Session() as session:
-                        team.players = (session.query(Account.first_name, 
-                                                      Account.last_name, 
-                                                      Account.id, 
-                                                      Player.captain)
-                                        .join(Player, Player.player_id == Account.id)
-                                        .filter(Player.team_id == team.id)
-                                        .all()
-                    )
+                        team.players = team.get_roster(session)
         except Exception as e:
             print(f"An error occurred: {e}")
 
