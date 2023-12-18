@@ -1,13 +1,14 @@
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, session, url_for
 )
-from werkzeug.security import check_password_hash, generate_password_hash
-from .db import Account, Event, Team, Player, db
+from sqlalchemy import update
+from .db import db
 from .auth import login_required
+from .account import Account
+
 
 bp = Blueprint('user', __name__, url_prefix='/user')
 
-# TODO user profile
 @bp.route("/profile", methods=("GET", "POST"))
 @login_required
 def profile():
@@ -27,62 +28,58 @@ def profile():
 
 
 # TODO user update profile
-# @app.route("/update", methods=["GET", "POST"])
-# @login_required
-# def update():
-#     """Update account information"""
+@bp.route("/update", methods=("GET", "POST"))
+@login_required
+def update():
+    """Update account information"""
 
-#     # Get current user information
-#     user = db.execute("""SELECT * 
-#                          FROM accounts 
-#                          WHERE id = ?""", 
-#                         session["user_id"])
+    # Get current user information
+    user = g.user
 
-#     # User reaches page via GET
-#     if request.method == "GET":
-#         return render_template("update.html", user=user)
+    if request.method == "GET":
+        return render_template("user/update.html", user=user)
 
-#     # User reaches page via POST
+    first_name = request.form.get("firstname")
+    last_name = request.form.get("lastname")
+    phone_number = request.form.get("phonenumber")
+    email = request.form.get("email")
+    gender = request.form.get("gender")
+    error = None
 
-#     first_name = request.form.get("firstname")
-#     last_name = request.form.get("lastname")
-#     phone_number = request.form.get("phonenumber")
-#     email = request.form.get("email")
-#     gender = request.form.get("gender")
+    # check phone number for only digits
+    if not phone_number.isdigit():
+        error = "Phone number must only contain numbers."
 
-#     # Update account information, if necessary
-#     if first_name != user[0]["first_name"]:
-#         db.execute("""UPDATE accounts 
-#                       SET first_name = ? 
-#                       WHERE id = ?""", 
-#                     first_name, session["user_id"])
+    if error is None:
+        try:
+            # Update account information, if necessary
+            if first_name != user.first_name:
+                Account.update_first_name(user.id, first_name, db.session)
 
-#     if last_name != user[0]["last_name"]:
-#         db.execute("""UPDATE accounts 
-#                       SET last_name = ? 
-#                       WHERE id = ?""", 
-#                     last_name, session["user_id"])
+            if last_name != user.last_name:
+                Account.update_last_name(user.id, last_name, db.session)
 
-#     if phone_number != user[0]["phone_number"]:
-#         db.execute("""UPDATE accounts 
-#                       SET phone_number = ? 
-#                       WHERE id = ?""", 
-#                       phone_number, session["user_id"])
+            if phone_number != user.phone_number:
+                Account.update_phone_number(user.id, phone_number, db.session)
 
-#     if email != user[0]["email"]:
-#         db.execute("""UPDATE accounts 
-#                       SET email = ? 
-#                       WHERE id = ?""", 
-#                       email, session["user_id"])
+            if email != user.email:
+                Account.update_email(user.id, email, db.session)
 
-#     if gender != user[0]["gender"]:
-#         db.execute("""UPDATE accounts 
-#                       SET gender = ? 
-#                       WHERE id = ?""", 
-#                       gender, session["user_id"])
+            if gender != user.gender:
+                Account.update_gender(user.id, gender, db.session)
 
-#     flash("You have successfully updated your contact information.", "success")
-#     return redirect("/profile")
+            flash("You have successfully updated your contact information.", "success")
+            return redirect(url_for('user.profile'))
+        except Exception as e:
+            print(f"Error: {e}")
+            error = "An error occured while updating contact information"
+            db.session.rollback()
+        finally:
+            db.session.close()
+    
+    flash(error, "error")
+
+    return render_template("user/update.html", user=user)
 
 # TODO user change password
 # @app.route("/password", methods=["GET", "POST"])

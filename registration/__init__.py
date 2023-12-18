@@ -1,9 +1,13 @@
 from flask import Flask, render_template
 from random import randint
-from . import auth, user
-from .db import Event, Team, Player, Account, init_db
+
+
 
 def create_app():
+    from .event import Event
+    from . import auth, user
+    from .db import init_db
+    
     # Configure application
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
