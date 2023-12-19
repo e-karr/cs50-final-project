@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Login
+{% endblock %}
+
+{% block main %}
+
+    <h1 class="page-title">Log In</h1>
+
+    <form action="{{ url_for('auth.login') }}" method="post">
+        <div class="form-floating col-sm-7 mx-auto mb-3">
+            <input type="email" class="form-control" id="floatingInput" name="email" placeholder="Email">
+            <label for="floatingInput">Email</label>
+        </div>
+        <div class="form-floating col-sm-7 mx-auto mb-3">
+            <input type="password" class="form-control" id="floatingInput" name="password" placeholder="Password">
+            <label for="floatingInput">Password</label>
+        </div>
+        <div class="d-grid gap-2 col-6 mx-auto">
+            <button class="btn btn-kvkl" type="submit">Log In</button>
+            <a class="btn btn-danger" href="{{ url_for('main.index') }}">Cancel</a>
+        </div>
+    </form>
+
+{% endblock %}
