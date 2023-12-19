@@ -26,13 +26,14 @@ def profile():
 
         # get team rosters
         for team in history:
-            team.players = team.get_roster(db.session)
+            try:
+                team.players = team.get_roster(db.session)
+            except Exception as e:
+                print(f"Error getting roster for team {team.id}: {e}")
     except Exception as e:
             print(f"Error: {e}")
             error = "An error occured while getting registration history"
             db.session.rollback()
-    finally:
-        db.session.close()
     
     if error:
         flash(error, 'error')
@@ -97,12 +98,10 @@ def update():
             print(f"Error: {e}")
             error = "An error occured while updating contact information"
             db.session.rollback()
-        finally:
-            db.session.close()
     
     flash(error, "error")
 
-    return render_template("user/update.html", user=user)
+    return redirect(url_for('user.update'))
 
 @bp.route("/password", methods=("GET", "POST"))
 @login_required
@@ -143,11 +142,9 @@ def password():
                 print(f"Error: {e}")
                 error = "An error occured while updating password"
                 db.session.rollback()
-        finally:
-            db.session.close()
 
     flash(error, "error")
-    return render_template("user/password.html")
+    return redirect(url_for('user.password'))
 
 @bp.route("/delete_account", methods=["POST"])
 @login_required
@@ -175,8 +172,6 @@ def delete_account():
                 print(f"Error: {e}")
                 error = "An error occured while deleting account"
                 db.session.rollback()
-        finally:
-            db.session.close()
 
     flash(error, 'error')
     return redirect(url_for('user.profile'))

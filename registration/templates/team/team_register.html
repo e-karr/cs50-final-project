@@ -11,13 +11,13 @@
     <div class="col-sm-7 mx-auto mb-3">
         <ul>
             <li>When you register a team, you will be listed as the captain for that team and automatically registered as a player.</li>
-            <li>Upon successful registration, you will be emailed a 6-digit passcode to share with your teammates.</li>
+            <li>Upon successful registration, you will be shown a 6-digit passcode to share with your teammates. The passcode will also be listed in your profile.</li>
             <li>Your teammates must submit the correct 6-digit passcode in order to join your team.</li>
             <li>If you update your name and/or contact information in this form, your account information will also be updated.</li>
         </ul>
     </div>
 
-    <form action="/team_register" method="post">
+    <form action="/team/team_register" method="post">
         <div class="col-sm-7 mx-auto mb-3">
             <select class="form-select" name="event">
                 <option disabled selected>Select Event...</option>
@@ -35,26 +35,27 @@
             <label for="floatingInput">Sponsor (if applicable)</label>
         </div>
         <div class="form-floating col-sm-7 mx-auto mb-3">
-            <input type="text" class="form-control" id="floatingInput" placeholder="First name" name="firstname" value="{{ captain[0].first_name }}">
+            <input type="text" class="form-control" id="floatingInput" placeholder="First name" name="firstname" value="{{ user.first_name }}">
             <label for="floatingInput">First Name</label>
         </div>
         <div class="form-floating col-sm-7 mx-auto mb-3">
-            <input type="text" class="form-control" id="floatingInput" placeholder="Last name" name="lastname" value="{{ captain[0].last_name }}">
+            <input type="text" class="form-control" id="floatingInput" placeholder="Last name" name="lastname" value="{{ user.last_name }}">
             <label for="floatingInput">Last Name</label>
         </div>
         <div class="form-floating col-sm-7 mx-auto">
-            <input type="tel" class="form-control" id="floatingInput" placeholder="Phone number" name="phonenumber" value="{{ captain[0].phone_number }}">
+            <input type="tel" class="form-control" id="floatingInput" placeholder="Phone number" name="phonenumber" value="{{ user.phone_number }}">
             <label for="floatingInput">Phone Number</label>
         </div>
         <div class="col-sm-7 mx-auto mb-3">
             <p>Numbers only.</p>
         </div>
         <div class="form-floating col-sm-7 mx-auto mb-3">
-            <input type="email" class="form-control" id="floatingInput" name="email" placeholder="Email" value="{{ captain[0].email }}">
+            <input type="email" class="form-control" id="floatingInput" name="email" placeholder="Email" value="{{ user.email }}">
             <label for="floatingInput">Email</label>
         </div>
         <div class="d-grid gap-2 col-6 mx-auto">
             <button class="btn btn-kvkl" type="submit">Register Team</button>
+            <a class="btn btn-danger" href="/">Cancel</a>
         </div>
 
     </form>

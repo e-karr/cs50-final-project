@@ -17,10 +17,10 @@ class Team(Base):
     def get_roster(self, session):
         from .account import Account
         from .player import Player
-        roster = (session.query(Account.first_name, 
-                                Account.last_name,  
-                                Player.captain)
-                  .join(Player)
-                  .filter(Player.team_id == self.id)
-                  .all())
+        roster = (
+            session.query(Account.first_name, Account.last_name, Player.captain)
+            .join(Player, Player.player_id == Account.id)
+            .filter(Player.team_id == self.id)
+            .all()
+        )
         return roster

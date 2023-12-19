@@ -18,3 +18,7 @@ class Event(Base):
     spots_available = Column(Integer, nullable=False)
 
     teams = relationship('Team', back_populates='event')
+
+    def update_spots_available(self, session):
+        self.spots_available = self.spots_available - 1
+        session.commit()

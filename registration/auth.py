@@ -22,6 +22,7 @@ def register():
         gender = request.form.get("gender")
 
         error = None
+        existing_account = Account.get_user_by_email(db.session, email)
 
         # validate form input
         if not first_name:
@@ -40,34 +41,29 @@ def register():
             error = "Must confirm password."
         elif password:
             error = Account.validate_password(password, confirmation)
+        elif existing_account:
+            error = "Email is already taken. Please choose a different email."
         else:
             error = Account.validate_phone_number(phone_number)
 
         if error is None:
             try:
-                # Check if the email is already taken
-                existing_account = Account.get_user_by_email(db.session, email)
-                if existing_account:
-                    error = "Email is already taken. Please choose a different email."
-                else:
-                    account = Account(
-                        email=email,
-                        first_name=first_name,
-                        last_name=last_name,
-                        phone_number=phone_number,
-                        password_hash=generate_password_hash(password),
-                        gender=gender
-                    )
-                    db.session.add(account)
-                    db.session.commit()
-                    flash("You have successfully created an account.", "success")
-                    return redirect(url_for('auth.login'))
+                account = Account(
+                    email=email,
+                    first_name=first_name,
+                    last_name=last_name,
+                    phone_number=phone_number,
+                    password_hash=generate_password_hash(password),
+                    gender=gender
+                )
+                db.session.add(account)
+                db.session.commit()
+                flash("You have successfully created an account.", "success")
+                return redirect(url_for('auth.login'))
             except Exception as e:
                 print(f"Error during registration: {e}")
                 error = "An error occurred during registration"
                 db.session.rollback()
-            finally:
-                db.session.close()
 
         flash(error, "error")
 
@@ -106,8 +102,6 @@ def login():
             except Exception as e:
                 print(f"Error during login: {e}")
                 error = "An error occurred during login"
-            finally:
-                db.session.close()
 
         flash(error, "error")
 

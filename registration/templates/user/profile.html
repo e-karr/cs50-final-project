@@ -76,7 +76,7 @@ main %}
                 </div>
                 <div class="modal-body text-start">
                   <ul>
-                    {% if team.players %} {% for player in team["players"] %}
+                    {% if team.players %} {% for player in team.players %}
                     <li>
                       {{ player.first_name }} {{ player.last_name }} {% if
                       player.captain == "Yes" %} (Captain) {% endif %}
@@ -194,7 +194,7 @@ main %}
                     <div class="modal-body text-start">
                       <select class="form-select" name="new_captain">
                         <option disabled selected>Select New Captain...</option>
-                        {% for player in team["players"] %}
+                        {% for player in team.players %}
                         <option value="{{ player.id }}">
                           {{ player.first_name }} {{ player.last_name }} {% if
                           player.captain == "Yes" %} (Captain) {% endif %}

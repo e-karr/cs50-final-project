@@ -1,135 +1,114 @@
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for, session
 )
-from werkzeug.security import check_password_hash, generate_password_hash
+from random import randint
 from .auth import login_required
 from .db import db
+from .models.event import Event
+from .models.account import Account
+from .models.team import Team
+from .models.player import Player
 
-# @app.route("/team_register", methods=["GET", "POST"])
-# @login_required
-# def team_register():
-#     """Register a new team"""
+bp = Blueprint('team', __name__, url_prefix='/team')
 
-#     # Select contact info from logged in user
-#     captain = db.execute("""SELECT email, first_name, last_name, phone_number 
-#                             FROM accounts WHERE id = ?""", 
-#                             session["user_id"])
+@bp.route("/team_register", methods=("GET", "POST"))
+@login_required
+def team_register():
+    """Register a new team"""
 
-#     # User reached route via GET
-#     if request.method == "GET":
-        
-#         # Select events from events table
-#         events = db.execute("SELECT * FROM events")
-        
-#         return render_template("team_register.html", events=events, captain=captain)
+    user = g.user
 
-#     #User reached route via POST
+    # User reached route via GET
+    if request.method == "GET":
+        events = Event.query.all()
+        return render_template("team/team_register.html", events=events, user=user)
 
-#     # Generate random 6-digit passcode
-#     passcode = randint(100000, 999999)
-    
-#     # Validate form inputs
-#     event_id = int(request.form.get("event"))
-#     team_name = request.form.get("teamname")
-#     sponsor = request.form.get("sponsor")
-#     first_name = request.form.get("firstname")
-#     last_name = request.form.get("lastname")
-#     phone_number = request.form.get("phonenumber")
-#     email = request.form.get("email")
+    #User reached route via POST
 
-#     if not event_id:
-#         flash("Must select an event.", "error")
-#         return redirect("/team_register")
+    # Generate random 6-digit passcode
+    passcode = randint(100000, 999999)
+    event_id = request.form.get("event")
+    team_name = request.form.get("teamname")
+    sponsor = request.form.get("sponsor")
+    first_name = request.form.get("firstname")
+    last_name = request.form.get("lastname")
+    phone_number = request.form.get("phonenumber")
+    email = request.form.get("email")
+    error = None
 
-#     if not team_name:
-#         flash("Must enter a team name.", "error")
-#         return redirect("/team_register")
+    if event_id:
+        event_id = int(event_id)
+        existing_team = Team.query.filter_by(team_name=team_name, event_id=event_id).first()
+        selected_event = Event.query.filter_by(id=event_id).first()
+        already_registered = Player.query.filter_by(player_id=user.id, event_id=event_id).first()
 
-#     if not first_name:
-#         flash("Must enter a first name.", "error")
-#         return redirect("/team_register")
+    # Validate form inputs
+    if not event_id:
+        error = "Must select an event."
+    elif not team_name:
+        error = "Must enter a team name."
+    elif not first_name:
+        error = "Must enter a first name."
+    elif not last_name:
+        error = "Must enter a last name."
+    elif not phone_number:
+        error = "Must enter a phone number."
+    elif not email:
+        error = "Must enter an email."
+    elif existing_team:
+        error = f"This team is already registered for {selected_event.event_name}"
+    elif already_registered:
+        error = f"You are already registered for {selected_event.event_name}"
+    else:
+        error = Account.validate_phone_number(phone_number)
 
-#     if not last_name:
-#         flash("Must enter a last name.", "error")
-#         return redirect("/team_register")
+    if error == None:
+        try:
+            # Update account information, if necessary
+            if first_name != user.first_name:
+                user.update_first_name(first_name, db.session)
 
-#     if not phone_number:
-#         flash("Must enter a phone number.", "error")
-#         return redirect("/team_register")
+            if last_name != user.last_name:
+                user.update_last_name(last_name, db.session)
 
-#     if not phone_number.isdigit():
-#         flash("Phone number must only contain numbers.", "error")
-#         return redirect("/team_register")
+            if phone_number != user.phone_number:
+                user.update_phone_number(phone_number, db.session)
 
-#     if not email:
-#         flash("Must enter an email.", "error")
-#         return redirect("/team_register")
+            if email != user.email:
+                user.update_email(email, db.session)
 
-#     if len(db.execute("""SELECT team_name 
-#                          FROM teams 
-#                          WHERE team_name = ? 
-#                          AND event_id = ?""", 
-#                          team_name, event_id)) != 0:
-#         flash("This team is already registered", "error")
-#         return redirect("/team_register")
+            # Insert into teams database
+            team = Team(
+                team_name=team_name,
+                sponsor=sponsor,
+                event_id=event_id,
+                passcode=passcode
+            )
+            db.session.add(team)
+            db.session.commit()
 
-#     # Check that player isn't already registered for event
-#     event_name = db.execute("SELECT event_name FROM events WHERE id = ?", event_id)
-#     if len(db.execute("""SELECT * 
-#                          FROM registered_players 
-#                          WHERE player_id = ? 
-#                          AND event_id = ?""", 
-#                          session["user_id"], event_id)) != 0:
-#         flash("You are already registered for %s." % (event_name[0])["event_name"], "error")
-#         return redirect("/team_register")
+            # update spots available
+            selected_event.update_spots_available(db.session)
 
-#     # Update user acccount information, if necessary
-#     if first_name != captain[0]["first_name"]:
-#         db.execute("""UPDATE accounts 
-#                       SET first_name = ? 
-#                       WHERE id = ?""", 
-#                       first_name, session["user_id"])
+            # Add captain to registered_players
+            player = Player(
+                captain="Yes",
+                player_id=user.id,
+                team_id=team.id,
+                event_id=event_id
+            )
+            db.session.add(player)
+            db.session.commit()
+            
+            flash(f"You have successfully registered your team. Your team passcode is {passcode}.", "success")
+            return redirect(url_for('index'))
+        except Exception as e:
+            print(f"Error: {e}")
+            error = "An error occured while registering a team."
+            db.session.rollback()
 
-#     if last_name != captain[0]["last_name"]:
-#         db.execute("""UPDATE accounts 
-#                       SET last_name = ? 
-#                       WHERE id = ?""", 
-#                       last_name, session["user_id"])
-
-#     if phone_number != captain[0]["phone_number"]:
-#         db.execute("""UPDATE accounts 
-#                       SET phone_number = ? 
-#                       WHERE id = ?""", 
-#                       phone_number, session["user_id"])
-
-#     if email != captain[0]["email"]:
-#         db.execute("""UPDATE accounts 
-#                       SET email = ? 
-#                       WHERE id = ?""", 
-#                       email, session["user_id"])
-
-#     # Insert into teams database and update spots available
-#     db.execute("""INSERT INTO teams (team_name, sponsor, event_id, passcode) 
-#                   VALUES (?, ?, ?, ?)""", 
-#                   team_name, sponsor, event_id, passcode)
-
-#     db.execute("""UPDATE events 
-#                   SET spots_available = spots_available - 1 
-#                   WHERE id = ?""", 
-#                   event_id)
-
-#     # Add captain to registered_players
-#     team_id = db.execute("""SELECT id 
-#                             FROM teams 
-#                             WHERE event_id = ? 
-#                             AND team_name = ?""", 
-#                             event_id, team_name)
-#     db.execute("""INSERT INTO registered_players (captain, player_id, team_id, event_id) 
-#                   VALUES (?, ?, ?, ?)""", 
-#                   "Yes", session["user_id"], team_id[0]["id"], event_id)
-
-#     flash("You have successfully registered your team. Your team passcode is %d. This passcode is also available in your profile." % (passcode), "success")
-#     return redirect("/team_register")
+    flash(error, 'error')
+    return redirect(url_for('team.team_register'))
 
 # @app.route("/event_select", methods=["GET", "POST"])
 # @login_required

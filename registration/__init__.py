@@ -1,7 +1,6 @@
 from flask import Flask, render_template, flash
-from random import randint
 from .models.event import Event
-from . import auth, user
+from . import auth, user, teams
 from .db import init_db
 
 def create_app():
@@ -22,6 +21,7 @@ def create_app():
 
     app.register_blueprint(auth.bp)
     app.register_blueprint(user.bp)
+    app.register_blueprint(teams.bp)
 
     @app.route("/", methods=["GET"])
     def index():
