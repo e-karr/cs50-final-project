@@ -77,9 +77,10 @@ class Account(db.Model):
         from .event import Event
         from .player import Player
         from .team import Team
-        history = (session.query(Event.event_name, 
+        raw_history = (session.query(Event.event_name, 
                                 Event.month, 
-                                Event.day, 
+                                Event.day,
+                                Event.year, 
                                 Event.time, 
                                 Event.location, 
                                 Team.team_name, 
@@ -91,6 +92,18 @@ class Account(db.Model):
                             .join(Player, Player.team_id == Team.id)
                             .filter(Player.player_id == self.id)
                             .all())
+        
+        history = []
+        for event_name, month, day, year, time, location, team_name, passcode, captain, team_id in raw_history:
+            try:
+                team_instance = Team.query.get(team_id)
+                team_instance.players = team_instance.get_roster(session)
+
+                # Append a tuple with all the information including players
+                history.append((event_name, month, day, year, time, location, team_name, passcode, captain, team_id, team_instance.players))
+            except Exception as e:
+                print(f"Error getting roster for team {team_id}: {e}")
+        
         return history
     
     def delete_account(self, session):

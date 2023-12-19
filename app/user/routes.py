@@ -23,13 +23,6 @@ def profile():
     try:
         # get registration history
         history = user.get_registration_history(db.session)
-
-        # get team rosters
-        for team in history:
-            try:
-                team.players = team.get_roster(db.session)
-            except Exception as e:
-                print(f"Error getting roster for team {team.id}: {e}")
     except Exception as e:
             print(f"Error: {e}")
             error = "An error occured while getting registration history"

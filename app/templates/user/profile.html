@@ -29,24 +29,24 @@ main %}
     </div>
     <div class="col">
       <h3 class="text-center mb-3">Registration History</h3>
-      {% if history %} {% for team in history %}
+      {% if history %} {% for event_name, month, day, year, time, location, team_name, passcode, captain, team_id, players in history %}
 
       <div class="list-group list-group-item container">
         <div class="row">
           <div class="col">
-            <h5 class="mb-1">{{ team.team_name }}</h5>
-            <div>{{ team.event_name }}</div>
+            <h5 class="mb-1">{{ team_name }}</h5>
+            <div>{{ event_name }}</div>
             <small class="mb-1"
-              >{{ team.month }} {{ team.day }}, {{ team.year }}; {{ team.time
+              >{{ month }} {{ day }}, {{ year }}; {{ time
               }}</small
             >
-            <div><small>{{ team.location }}</small></div>
+            <div><small>{{ location }}</small></div>
             <div>
               <button
                 type="button"
                 class="btn btn-link btn-sm"
                 data-bs-toggle="modal"
-                data-bs-target="#teamRosterModal{{team.id}}"
+                data-bs-target="#teamRosterModal{{team_id}}"
               >
                 Team Roster
               </button>
@@ -56,7 +56,7 @@ main %}
           <!-- Team Roster Modal -->
           <div
             class="modal fade"
-            id="teamRosterModal{{team.id}}"
+            id="teamRosterModal{{team_id}}"
             tabindex="-1"
             aria-labelledby="exampleModalLabel"
             aria-hidden="true"
@@ -65,7 +65,7 @@ main %}
               <div class="modal-content">
                 <div class="modal-header">
                   <h1 class="modal-title fs-5" id="exampleModalLabel">
-                    {{ team.team_name }} Team Roster
+                    {{ team_name }} Team Roster
                   </h1>
                   <button
                     type="button"
@@ -76,7 +76,7 @@ main %}
                 </div>
                 <div class="modal-body text-start">
                   <ul>
-                    {% if team.players %} {% for player in team.players %}
+                    {% if players %} {% for player in players %}
                     <li>
                       {{ player.first_name }} {{ player.last_name }} {% if
                       player.captain == "Yes" %} (Captain) {% endif %}
@@ -98,17 +98,17 @@ main %}
           </div>
 
           <div class="col text-end">
-            <small>Captain: {{ team.captain }}</small>
-            {% if team.captain == "Yes" %}
+            <small>Captain: {{ captain }}</small>
+            {% if captain == "Yes" %}
             <div>
-              <small>Passcode: {{ team.passcode }}</small>
+              <small>Passcode: {{ passcode }}</small>
             </div>
             <div>
               <button
                 type="button"
                 class="btn btn-kvkl mb-1 btn-sm"
                 data-bs-toggle="modal"
-                data-bs-target="#captainModal{{team.id}}"
+                data-bs-target="#captainModal{{team_id}}"
               >
                 Update Captain
               </button>
@@ -116,7 +116,7 @@ main %}
                 type="button"
                 class="btn btn-kvkl mb-1 btn-sm"
                 data-bs-toggle="modal"
-                data-bs-target="#deregisterModal{{team.id}}"
+                data-bs-target="#deregisterModal{{team_id}}"
               >
                 De-register Team
               </button>
@@ -125,7 +125,7 @@ main %}
             <!-- De-Register Modal -->
             <div
               class="modal fade"
-              id="deregisterModal{{team.id}}"
+              id="deregisterModal{{team_id}}"
               tabindex="-1"
               aria-labelledby="exampleModalLabel"
               aria-hidden="true"
@@ -144,7 +144,7 @@ main %}
                     ></button>
                   </div>
                   <div class="modal-body text-start">
-                    Are you sure you want to de-register {{ team.team_name }}?
+                    Are you sure you want to de-register {{ team_name }}?
                   </div>
                   <div class="modal-footer">
                     <button
@@ -158,7 +158,7 @@ main %}
                       <button
                         type="submit"
                         name="de-register"
-                        value="{{ team.id }}"
+                        value="{{ team_id }}"
                         class="btn btn-kvkl"
                       >
                         De-Register Team
@@ -172,7 +172,7 @@ main %}
             <!-- Update Captain Modal -->
             <div
               class="modal fade"
-              id="captainModal{{team.id}}"
+              id="captainModal{{team_id}}"
               tabindex="-1"
               aria-labelledby="exampleModalLabel"
               aria-hidden="true"
@@ -194,7 +194,7 @@ main %}
                     <div class="modal-body text-start">
                       <select class="form-select" name="new_captain">
                         <option disabled selected>Select New Captain...</option>
-                        {% for player in team.players %}
+                        {% for player in players %}
                         <option value="{{ player.id }}">
                           {{ player.first_name }} {{ player.last_name }} {% if
                           player.captain == "Yes" %} (Captain) {% endif %}
@@ -213,7 +213,7 @@ main %}
                       <button
                         type="submit"
                         name="team_id"
-                        value="{{ team.id }}"
+                        value="{{ team_id }}"
                         class="btn btn-kvkl"
                       >
                         Update Captain
@@ -230,7 +230,7 @@ main %}
                 type="button"
                 class="btn btn-kvkl btn-sm"
                 data-bs-toggle="modal"
-                data-bs-target="#leaveModal{{team.id}}"
+                data-bs-target="#leaveModal{{team_id}}"
               >
                 Leave Team
               </button>
@@ -239,7 +239,7 @@ main %}
             <!-- Leave Team Modal -->
             <div
               class="modal fade"
-              id="leaveModal{{team.id}}"
+              id="leaveModal{{team_id}}"
               tabindex="-1"
               aria-labelledby="exampleModalLabel"
               aria-hidden="true"
@@ -258,7 +258,7 @@ main %}
                     ></button>
                   </div>
                   <div class="modal-body text-start">
-                    Are you sure you want to leave {{ team.team_name }}?
+                    Are you sure you want to leave {{ team_name }}?
                   </div>
                   <div class="modal-footer">
                     <button
@@ -272,7 +272,7 @@ main %}
                       <button
                         type="submit"
                         name="leave"
-                        value="{{ team.id }}"
+                        value="{{ team_id }}"
                         class="btn btn-kvkl"
                       >
                         Leave Team
