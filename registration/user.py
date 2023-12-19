@@ -1,36 +1,48 @@
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, url_for
+    Blueprint, flash, g, redirect, render_template, request, url_for, session
 )
-
+from werkzeug.security import check_password_hash, generate_password_hash
 from .auth import login_required
+from .db import db
 from .models.account import Account
-
+from .models.player import Player
+from .models.team import Team
 
 bp = Blueprint('user', __name__, url_prefix='/user')
 
 @bp.route("/profile", methods=("GET", "POST"))
 @login_required
 def profile():
-    from .db import db
     """Show user profile"""
 
     # get logged in user id
-    user= g.user
+    user = g.user
+    history = None
+    error = None
 
-    # get registration history
-    history = user.get_registration_history(db.session)
+    try:
+        # get registration history
+        history = user.get_registration_history(db.session)
 
-    # get team rosters
-    for team in history:
-        team.players = team.get_roster(db.session)
+        # get team rosters
+        for team in history:
+            team.players = team.get_roster(db.session)
+    except Exception as e:
+            print(f"Error: {e}")
+            error = "An error occured while getting registration history"
+            db.session.rollback()
+    finally:
+        db.session.close()
+    
+    if error:
+        flash(error, 'error')
 
-    return render_template("user/profile.html", id=user.id, user=user, history=history)
+    return render_template("user/profile.html", user=user, history=history)
 
 
 @bp.route("/update", methods=("GET", "POST"))
 @login_required
 def update():
-    from .db import db
     """Update account information"""
 
     # Get current user information
@@ -46,27 +58,38 @@ def update():
     gender = request.form.get("gender")
     error = None
 
-    # check phone number for only digits
-    if not phone_number.isdigit():
-        error = "Phone number must only contain numbers."
+    # validate form input
+    if not first_name:
+        error = "Must enter first name"
+    elif not last_name:
+        error = "Must enter last name"
+    elif not phone_number:
+        error = "Must enter phone number"
+    elif not email:
+        error = "Must enter an email."
+    elif not gender:
+        error = "Must select a gender"
+    else:
+        error = Account.validate_phone_number(phone_number)
+    
 
     if error is None:
         try:
             # Update account information, if necessary
             if first_name != user.first_name:
-                Account.update_first_name(user.id, first_name, db.session)
+                user.update_first_name(first_name, db.session)
 
             if last_name != user.last_name:
-                Account.update_last_name(user.id, last_name, db.session)
+                user.update_last_name(last_name, db.session)
 
             if phone_number != user.phone_number:
-                Account.update_phone_number(user.id, phone_number, db.session)
+                user.update_phone_number(phone_number, db.session)
 
             if email != user.email:
-                Account.update_email(user.id, email, db.session)
+                user.update_email(email, db.session)
 
             if gender != user.gender:
-                Account.update_gender(user.id, gender, db.session)
+                user.update_gender(gender, db.session)
 
             flash("You have successfully updated your contact information.", "success")
             return redirect(url_for('user.profile'))
@@ -81,90 +104,79 @@ def update():
 
     return render_template("user/update.html", user=user)
 
-# TODO user change password
-# @app.route("/password", methods=["GET", "POST"])
-# @login_required
-# def password():
-#     """Change Password"""
+@bp.route("/password", methods=("GET", "POST"))
+@login_required
+def password():
+    """Change Password"""
 
-#     # User reaches page via GET
-#     if request.method == "GET":
-#         return render_template("password.html")
+    # User reaches page via GET
+    if request.method == "GET":
+        return render_template("user/password.html")
+    
+    # Get current user information
+    user = g.user
 
-#     # User reaches page via POST
-#     old_password = request.form.get("old_password")
-#     new_password = request.form.get("new_password")
-#     confirmation = request.form.get("confirmation")
+    # User reaches page via POST
+    old_password = request.form.get("old_password")
+    new_password = request.form.get("new_password")
+    confirmation = request.form.get("confirmation")
+    error = None
 
-#     old_hash = db.execute("""SELECT password_hash 
-#                              FROM accounts WHERE id = ?""", 
-#                              session["user_id"])
+    if not old_password:
+        error = "Must enter current password."
+    elif not new_password:
+        error = "Must enter new password."
+    elif not confirmation:
+        error = "Must confirm new password."
+    elif not check_password_hash(user.password_hash, old_password):
+        error = "Invalid current password."
+    else:
+        error = Account.validate_password(new_password, confirmation)
 
-#     special_characters = ['$', '#', '@', '!', '*']
+    if error is None:
+        try:
+            
+                user.update_password(generate_password_hash(new_password), db.session)
+                flash("You have successfully updated your password.", "success")
+                return redirect(url_for('user.profile'))
+        except Exception as e:
+                print(f"Error: {e}")
+                error = "An error occured while updating password"
+                db.session.rollback()
+        finally:
+            db.session.close()
 
-#     if not old_password:
-#         flash("Must enter current password.", "error")
-#         return redirect("/password")
+    flash(error, "error")
+    return render_template("user/password.html")
 
-#     if not new_password:
-#         flash("Must enter new password.", "error")
-#         return redirect("/password")
+@bp.route("/delete_account", methods=["POST"])
+@login_required
+def delete_account():
+    user = g.user
+    error = None
+    is_captain = (db.session.query(Player.captain, Team.team_name)
+                            .join(Team)
+                            .filter(Player.player_id == user.id)
+                            .all())
 
-#     if not confirmation:
-#         flash("Must confirm new password.", "error")
-#         return redirect("/password")
+    for i in is_captain:
+        if i[0] == "Yes":
+            error = f"Must designate alternative captain for {i[1]} before deleting account."
+            break
 
-#     # Validate password inputs
-#     if not check_password_hash(old_hash[0]["password_hash"], old_password):
-#         flash("Invalid current password.", "error")
-#         return redirect("/password")
+    if error is None:
+        try:
+            
+            user.delete_account(db.session)
+            flash("Your account was successfully deleted.", "success")
+            session.clear()
+            return redirect(url_for('index'))
+        except Exception as e:
+                print(f"Error: {e}")
+                error = "An error occured while deleting account"
+                db.session.rollback()
+        finally:
+            db.session.close()
 
-#     if new_password != confirmation:
-#         flash("New passwords don't match.", "error")
-#         return redirect("/password")
-
-#     if len(new_password) < 8:
-#         flash("Password must be at least 8 characters.", "error")
-#         return redirect("/password")
-
-#     if not any(i.isdigit() for i in new_password):
-#         flash("Password must contain at least one number.", "error")
-#         return redirect("/password")
-
-#     if not any(j.isupper() for j in new_password):
-#         flash("Password must contain at least one capital letter.", "error")
-#         return redirect("/password")
-
-#     if not any(k in special_characters for k in new_password):
-#         flash("Password must contain at least one special character ($, #, @, !, *).", "error")
-#         return redirect("/password")
-
-#     db.execute("""UPDATE accounts 
-#                   SET password_hash = ? 
-#                   WHERE id = ?""", 
-#                   generate_password_hash(new_password), session["user_id"])
-
-#     flash("Your password has been successfully updated.", "success")
-#     return redirect("/profile")
-
-# TODO delete account
-# @app.route("/delete_account", methods=["POST"])
-# @login_required
-# def delete_account():
-
-#     captain = db.execute("""SELECT captain, team_name 
-#                             FROM registered_players 
-#                             INNER JOIN teams ON teams.id = registered_players.team_id 
-#                             WHERE player_id = ?""", 
-#                             session["user_id"])
-
-#     for i in captain:
-#         if i["captain"] == "Yes":
-#             flash("Must designate alternative captain for %s before deleting account." % (i["team_name"]), "error")
-#             return redirect("/profile")
-
-#     db.execute("DELETE FROM accounts WHERE id = ?", session["user_id"])
-
-#     flash("Your account was successfully deleted.", "success")
-#     session.clear()
-#     return redirect("/")
+    flash(error, 'error')
+    return redirect(url_for('user.profile'))

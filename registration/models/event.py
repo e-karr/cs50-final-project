@@ -1,5 +1,6 @@
 from ..db import Base
 from sqlalchemy import Column, Integer, String
+from sqlalchemy.orm import relationship
 
 
 class Event(Base):
@@ -16,7 +17,4 @@ class Event(Base):
     number_teams = Column(Integer, nullable=False)
     spots_available = Column(Integer, nullable=False)
 
-    def get_teams(self, session):
-        from .team import Team
-        teams = session.query(Team).filter_by(event_id=self.id).all()
-        return teams
+    teams = relationship('Team', back_populates='event')

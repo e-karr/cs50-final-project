@@ -4,12 +4,12 @@ from flask import (
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 from .models.account import Account
+from .db import db
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 @bp.route("/register", methods=("GET", "POST"))
 def register():
-    from .db import db
     """Create a new account"""
     if request.method == "POST":
         # get input from create account form
@@ -21,8 +21,6 @@ def register():
         phone_number = request.form.get("phonenumber")
         gender = request.form.get("gender")
 
-        special_characters = ['$', '#', '@', '!', '*']
-
         error = None
 
         # validate form input
@@ -32,8 +30,6 @@ def register():
             error = "Must enter last name"
         elif not phone_number:
             error = "Must enter phone number"
-        elif not phone_number.isdigit():
-            error = "Phone number must only contain numbers."
         elif not email:
             error = "Must enter an email."
         elif not gender:
@@ -42,16 +38,10 @@ def register():
             error = "Must enter a password."
         elif not confirmation:
             error = "Must confirm password."
-        elif password != confirmation:
-            error = "Passwords don't match."
-        elif len(password) < 8:
-            error = "Password must be at least 8 characters."
-        elif not any(i.isdigit() for i in password):
-            error = "Password must contain at least one number."
-        elif not any(j.isupper() for j in password):
-            error = "Password must contain at least one capital letter."
-        elif not any(k in special_characters for k in password):
-            error = "Password must contain at least one special character ($, #, @, !, *)."
+        elif password:
+            error = Account.validate_password(password, confirmation)
+        else:
+            error = Account.validate_phone_number(phone_number)
 
         if error is None:
             try:
@@ -85,7 +75,6 @@ def register():
 
 @bp.route("/login", methods=("GET", "POST"))
 def login():
-    from .db import db
     """Log user in"""
     # User reached route via POST
     if request.method == "POST":
@@ -126,7 +115,6 @@ def login():
 
 @bp.before_app_request
 def load_logged_in_user():
-    from .db import db
     user_id = session.get('user_id')
 
     if user_id is None:
@@ -148,5 +136,3 @@ def login_required(view):
             return redirect(url_for('auth.login'))
         return view(*args, **kwargs)
     return decorated_function
-    
-    

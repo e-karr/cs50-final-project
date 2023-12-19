@@ -1,6 +1,5 @@
 from ..db import Base
-from sqlalchemy import Column, Integer, String, update
-
+from sqlalchemy import Column, Integer, String
 
 class Account(Base):
     __tablename__ = 'accounts'
@@ -20,56 +19,58 @@ class Account(Base):
 
     @classmethod
     def get_user_by_id(cls, session, user_id):
-        return session.query(cls).filter_by(id=user_id).first()
+        return session.get(cls, user_id)
     
     @classmethod
-    def update_first_name(cls, user_id, new_first_name, session):
-        stmt = (
-            update(cls)
-            .where(cls.id == user_id)
-            .values(first_name=new_first_name)
-        )
-        session.execute(stmt)
-        session.commit()
+    def validate_password(cls, password1, password2):
+        error = None
+
+        special_characters = ['$', '#', '@', '!', '*']
+
+        if password1 != password2:
+            error = "Password confirmation doesn't match."
+        elif len(password1) < 8:
+            error = "Password must be at least 8 characters."
+        elif not any(i.isdigit() for i in password1):
+            error = "Password must contain at least one number."
+        elif not any(j.isupper() for j in password1):
+            error = "Password must contain at least one capital letter."
+        elif not any(k in special_characters for k in password1):
+            error = "Password must contain at least one special character ($, #, @, !, *)."
+
+        return error
 
     @classmethod
-    def update_last_name(cls, user_id, new_last_name, session):
-        stmt = (
-            update(cls)
-            .where(cls.id == user_id)
-            .values(last_name=new_last_name)
-        )
-        session.execute(stmt)
+    def validate_phone_number(cls, phone_number):
+        error = None
+
+        if not phone_number.isdigit():
+            error = "Phone number must only contain numbers."
+        
+        return error
+    
+    def update_first_name(self, new_first_name, session):
+        self.first_name = new_first_name
         session.commit()
 
-    @classmethod
-    def update_phone_number(cls, user_id, new_phone_number, session):
-        stmt = (
-            update(cls)
-            .where(cls.id == user_id)
-            .values(phone_number=new_phone_number)
-        )
-        session.execute(stmt)
+    def update_last_name(self, new_last_name, session):
+        self.last_name = new_last_name
         session.commit()
 
-    @classmethod
-    def update_email(cls, user_id, new_email, session):
-        stmt = (
-            update(cls)
-            .where(cls.id == user_id)
-            .values(email=new_email)
-        )
-        session.execute(stmt)
+    def update_phone_number(self, new_phone_number, session):
+        self.phone_number = new_phone_number
         session.commit()
 
-    @classmethod
-    def update_gender(cls, user_id, new_gender, session):
-        stmt = (
-            update(cls)
-            .where(cls.id == user_id)
-            .values(gender=new_gender)
-        )
-        session.execute(stmt)
+    def update_email(self, new_email, session):
+        self.email = new_email
+        session.commit()
+
+    def update_gender(self, new_gender, session):
+        self.gender = new_gender
+        session.commit()
+
+    def update_password(self, new_password_hash, session):
+        self.password_hash = new_password_hash
         session.commit()
 
     def get_registration_history(self, session):
@@ -92,4 +93,6 @@ class Account(Base):
                             .all())
         return history
     
-    # TODO verify password requirements
+    def delete_account(self, session):
+        session.delete(self)
+        session.commit()
