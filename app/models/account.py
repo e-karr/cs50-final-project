@@ -1,9 +1,7 @@
 from sqlalchemy import Column, Integer, String
 
 from app.extensions import db
-from models.event import Event
-from models.player import Player
-from models.team import Team
+
 
 class Account(db.Model):
     __tablename__ = 'accounts'
@@ -74,6 +72,9 @@ class Account(db.Model):
         session.commit()
 
     def get_registration_history(self, session):
+        from .event import Event
+        from .player import Player
+        from .team import Team
         raw_history = (session.query(Event.event_name, 
                                 Event.month, 
                                 Event.day,
