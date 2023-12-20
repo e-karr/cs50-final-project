@@ -198,10 +198,10 @@ main %}
                     method="post"
                   >
                     <div class="modal-body text-start">
-                      <select class="form-select" name="new_captain">
+                      <select class="form-select" name="selected_captain">
                         <option disabled selected>Select New Captain...</option>
                         {% for player in players %}
-                        <option value="{{ player.id }}">
+                        <option value="{{ player.player_id }}">
                           {{ player.first_name }} {{ player.last_name }} {% if
                           player.captain == "Yes" %} (Captain) {% endif %}
                         </option>

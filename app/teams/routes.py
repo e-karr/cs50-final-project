@@ -296,36 +296,40 @@ def deregister_team():
 @bp.route("/update_captain", methods=["POST"])
 @login_required
 def update_captain():
-    return "Pending updates"
-#     """Update Captain"""
+    """Update Captain"""
+    user = g.user
+    team_id = int(request.form.get("team_id"))
+    error = None
 
-#     team_id = int(request.form.get("team_id"))
+    selected_captain = request.form.get("selected_captain")
+    print(selected_captain)
 
-#     new_captain = int(request.form.get("new_captain"))
+    if not selected_captain:
+        error = "Must select a new captain."
 
-#     if not new_captain:
-#         flash("Must select a new captain.", "error")
-#         redirect("/profile")
+    if error == None:
+        try: 
+            # Get team name
+            team_id = int(team_id)
+            team = db.session.get(Team, team_id)
 
-#     # Get team name
-#     team_name = db.execute("""SELECT team_name 
-#                               FROM teams 
-#                               WHERE id = ?""", 
-#                               team_id)
-    
-#     # Update old captain in registered players table
-#     db.execute("""UPDATE registered_players 
-#                   SET captain = 'No' 
-#                   WHERE player_id = ?
-#                   AND team_id = ?""", 
-#                   session["user_id"], team_id)
+            current_captain = db.session.query(Player).filter_by(team_id=team_id, player_id=user.id).first()
+            
+            # Update old captain in registered players table
+            current_captain.update_captain_status('No', db.session)
 
-#     # Update new captain in registered players table
-#     db.execute("""UPDATE registered_players 
-#                   SET captain = 'Yes' 
-#                   WHERE player_id = ?
-#                   AND team_id = ?""", 
-#                   new_captain, team_id)
+            # Update new captain in registered players table
+            new_captain_id = int(selected_captain)
+            new_captain = db.session.query(Player).filter_by(team_id=team_id, player_id=new_captain_id).first()
+            new_captain.update_captain_status('Yes', db.session)
 
-#     flash("You have successfully updated the captain for %s." % (team_name[0]["team_name"]), "success")
-#     return redirect("/profile")
+            flash(f"You have successfully updated the captain for {team.team_name}.", "success")
+        except Exception as e:
+            print(f"There was an error: {e}")
+            error = "There was an error updating the captain"
+            db.session.rollback()
+
+    if error:
+        flash(error, "error")
+
+    return redirect(url_for('user.profile'))

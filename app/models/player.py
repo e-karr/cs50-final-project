@@ -11,3 +11,7 @@ class Player(db.Model):
     player_id = Column(Integer, ForeignKey('accounts.id', ondelete='CASCADE'), nullable=False)
     team_id = Column(Integer, ForeignKey('teams.id', ondelete='CASCADE'), nullable=False)
     event_id = Column(Integer, ForeignKey('events.id', ondelete='CASCADE'), nullable=False)
+
+    def update_captain_status(self, new_status, session):
+        self.captain = new_status
+        session.commit()

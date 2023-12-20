@@ -18,7 +18,7 @@ class Team(db.Model):
         from .account import Account
         from .player import Player
         roster = (
-            session.query(Account.first_name, Account.last_name, Player.captain)
+            session.query(Account.first_name, Account.last_name, Player.player_id, Player.captain)
             .join(Player, Player.player_id == Account.id)
             .filter(Player.team_id == self.id)
             .all()
