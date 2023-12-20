@@ -46,10 +46,10 @@ CREATE TABLE registered_players(
 );
 
 INSERT INTO events (event_name, month, day, year, time, location, number_teams, spots_available)
-VALUES ('2024 Season', 'May', 19, 2024, '5:00pm', 'YSC', 0, 36);
+VALUES ('2024 Season', 'May', 19, 2024, '5:00pm', 'YSC', 36, 36);
 
 INSERT INTO events (event_name, month, day, year, time, location, number_teams, spots_available)
-VALUES ('Spring Charity Tournament', 'April', 28, 2024, '12:00pm', 'Holcom Park', 0, 16);
+VALUES ('Spring Charity Tournament', 'April', 28, 2024, '12:00pm', 'Holcom Park', 16, 16);
 
 INSERT INTO events (event_name, month, day, year, time, location, number_teams, spots_available)
-VALUES ('Yard Games', 'July', 13, 2024, '12:00pm', 'Broken Arrow Park', 0, 20);
+VALUES ('Yard Games', 'July', 13, 2024, '12:00pm', 'Broken Arrow Park', 20, 20);
