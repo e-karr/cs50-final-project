@@ -1,13 +1,11 @@
-from flask import (
-    flash, g, redirect, render_template, request, url_for, session
-)
+from flask import flash, g, redirect, render_template, request, url_for, session
 from werkzeug.security import check_password_hash, generate_password_hash
+
 from app.auth.routes import login_required
 from app.extensions import db
 from app.models.account import Account
 from app.models.player import Player
 from app.models.team import Team
-
 from app.user import bp
 
 @bp.route("/profile", methods=("GET", "POST"))

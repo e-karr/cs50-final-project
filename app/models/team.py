@@ -1,6 +1,9 @@
-from app.extensions import db
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
+
+from app.extensions import db
+from models.account import Account
+from models.player import Player
 
 class Team(db.Model):
     __tablename__ = 'teams'
@@ -15,8 +18,7 @@ class Team(db.Model):
     event = relationship('Event', back_populates='teams')
 
     def get_roster(self, session):
-        from .account import Account
-        from .player import Player
+        
         roster = (
             session.query(Account.first_name, Account.last_name, Player.player_id, Player.captain)
             .join(Player, Player.player_id == Account.id)

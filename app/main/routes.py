@@ -1,5 +1,6 @@
-from app.main import bp
 from flask import flash, render_template
+
+from app.main import bp
 from app.models.event import Event
 from app.extensions import db
 

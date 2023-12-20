@@ -1,5 +1,9 @@
-from app.extensions import db
 from sqlalchemy import Column, Integer, String
+
+from app.extensions import db
+from models.event import Event
+from models.player import Player
+from models.team import Team
 
 class Account(db.Model):
     __tablename__ = 'accounts'
@@ -17,12 +21,8 @@ class Account(db.Model):
     def get_user_by_email(cls, session, email):
         return session.query(cls).filter_by(email=email).first()
 
-    @classmethod
-    def get_user_by_id(cls, session, user_id):
-        return session.get(cls, user_id)
-    
-    @classmethod
-    def validate_password(cls, password1, password2):
+    @staticmethod
+    def validate_password(password1, password2):
         error = None
 
         special_characters = ['$', '#', '@', '!', '*']
@@ -40,8 +40,8 @@ class Account(db.Model):
 
         return error
 
-    @classmethod
-    def validate_phone_number(cls, phone_number):
+    @staticmethod
+    def validate_phone_number(phone_number):
         error = None
 
         if not phone_number.isdigit():
@@ -74,9 +74,6 @@ class Account(db.Model):
         session.commit()
 
     def get_registration_history(self, session):
-        from .event import Event
-        from .player import Player
-        from .team import Team
         raw_history = (session.query(Event.event_name, 
                                 Event.month, 
                                 Event.day,

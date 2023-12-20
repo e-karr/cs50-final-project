@@ -1,9 +1,9 @@
-from sqlalchemy import select
-from app.teams import bp
-from flask import (
-    flash, g, redirect, render_template, request, url_for,
-)
 from random import randint
+
+from sqlalchemy import select
+from flask import flash, g, redirect, render_template, request, url_for
+
+from app.teams import bp
 from app.auth.routes import login_required
 from app.extensions import db
 from app.models.event import Event

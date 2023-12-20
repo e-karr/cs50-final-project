@@ -1,5 +1,6 @@
-from app.extensions import db
 from sqlalchemy import Column, Integer, String, ForeignKey
+
+from app.extensions import db
 
 
 class Player(db.Model):

@@ -1,11 +1,10 @@
-import functools
-from flask import (
-    flash, g, redirect, render_template, request, session, url_for
-)
+from functools import wraps
+
+from flask import flash, g, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
+
 from app.models.account import Account
 from app.extensions import db
-
 from app.auth import bp
 
 @bp.route("/register", methods=("GET", "POST"))
@@ -114,7 +113,7 @@ def load_logged_in_user():
     if user_id is None:
         g.user = None
     else:
-        g.user = Account.get_user_by_id(db.session, user_id)
+        g.user = db.session.get(Account, user_id)
 
 @bp.route("/logout")
 def logout():
@@ -124,7 +123,7 @@ def logout():
     return redirect(url_for('main.index'))
 
 def login_required(view):
-    @functools.wraps(view)
+    @wraps(view)
     def decorated_function(*args, **kwargs):
         if g.user is None:
             return redirect(url_for('auth.login'))

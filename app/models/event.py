@@ -1,6 +1,7 @@
-from app.extensions import db
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
+
+from app.extensions import db
 
 
 class Event(db.Model):
