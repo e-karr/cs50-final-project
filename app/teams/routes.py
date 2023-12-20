@@ -140,7 +140,6 @@ def player_register():
     passcode = request.form.get("passcode")
     captain = request.form.get("captain")
 
-    print(team_id)
     if not team_id:
         error = "Must select a team."
     if not first_name:
@@ -163,16 +162,25 @@ def player_register():
     # Get team passcode
     if error == None:
         team_id = int(team_id)
+        event_id = db.session.execute(select(Team.event_id)
+                                      .where(Team.id == team_id)).scalar()
+        event_name = db.session.execute(select(Event.event_name)
+                                      .where(Event.id == event_id)).scalar()
         passcode = int(passcode)
         selected_team = db.session.get(Team, team_id)
         existing_player = db.session.execute(select(Player)
                                              .where(Player.player_id == user.id)
                                              .where(Player.team_id == team_id)).fetchone()
+        existing_event = db.session.execute(select(Player)
+                                             .where(Player.player_id == user.id)
+                                             .where(Player.event_id == event_id)).fetchone()
 
         if passcode != selected_team.passcode:
             error = "Invalid passcode."
         if existing_player:
             error = f"You are already registered for {selected_team.team_name}."
+        if existing_event:
+            error = f"You are already registered for {event_name}"
 
     # Update account information, if necessary
     if error == None:
@@ -212,33 +220,38 @@ def player_register():
 @bp.route("/leave_team", methods=["POST"])
 @login_required
 def leave_team():
-    return "Pending updates"
-#     """Leave team"""
+    """Leave team"""
+    user = g.user
+    team_id = int(request.form.get("leave"))
+    error = None
 
-#     team_id = int(request.form.get("leave"))
+    try:
 
-#     team_name = db.execute("""SELECT team_name 
-#                               FROM teams 
-#                               WHERE id = ?""", 
-#                               team_id)
+        team_name = db.session.execute(select(Team.team_name)
+                                    .where(Team.id == team_id)).scalar()
 
-#     captain = db.execute("""SELECT captain 
-#                             FROM registered_players 
-#                             WHERE player_id = ? 
-#                             AND team_id = ?""", 
-#                             session["user_id"], team_id)
+        is_captain = (db.session.execute(select(Player.captain)
+                                        .where(Player.player_id == user.id)
+                                        .where(Player.team_id == team_id))).scalar()
+        
+        if is_captain == "Yes":
+            error = f"Must designate alternative captain for {team_name} before leaving team."
+        
+        if error == None:
+            db.session.query(Player).filter_by(team_id=team_id, player_id=user.id).delete()
+            db.session.commit()
 
-#     if captain[0]["captain"] == "Yes":
-#         flash("Must designate alternative captain for %s before leaving team." % (team_name[0]["team_name"]), "error")
-#         return redirect("/profile")
+            flash(f"You have successfully left {team_name}.", "success")
 
-#     db.execute("""DELETE FROM registered_players 
-#                   WHERE team_id = ? 
-#                   AND player_id = ?""", 
-#                   team_id, session["user_id"])
+    except Exception as e:
+        print(f"There was an error: {e}")
+        error = "There was an error processing your request"
+        db.session.rollback()
 
-#     flash("You have successfully left %s." % (team_name[0]["team_name"]), "success")
-#     return redirect("/profile")
+    if error:
+        flash(error, "error")
+    
+    return redirect(url_for('user.profile'))
 
 @bp.route("/de-register_team", methods=["POST"])
 @login_required
