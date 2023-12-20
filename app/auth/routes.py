@@ -27,24 +27,24 @@ def register():
         # validate form input
         if not first_name:
             error = "Must enter first name"
-        elif not last_name:
+        if not last_name:
             error = "Must enter last name"
-        elif not phone_number:
+        if not phone_number:
             error = "Must enter phone number"
-        elif not email:
-            error = "Must enter an email."
-        elif not gender:
-            error = "Must select a gender"
-        elif not password:
-            error = "Must enter a password."
-        elif not confirmation:
-            error = "Must confirm password."
-        elif password:
-            error = Account.validate_password(password, confirmation)
-        elif existing_account:
-            error = "Email is already taken. Please choose a different email."
         else:
             error = Account.validate_phone_number(phone_number)
+        if not email:
+            error = "Must enter an email."
+        if not gender:
+            error = "Must select a gender"
+        if not password:
+            error = "Must enter a password."
+        if not confirmation:
+            error = "Must confirm password."
+        if password:
+            error = Account.validate_password(password, confirmation)
+        if existing_account:
+            error = "Email is already taken. Please choose a different email."
 
         if error is None:
             try:
@@ -81,7 +81,7 @@ def login():
 
         if not email:
             error = "Please enter an email."
-        elif not password:
+        if not password:
             error = "Please enter a password."
 
         if error is None:
@@ -91,7 +91,7 @@ def login():
                 # Check for valid email and password
                 if user is None:
                     error = "Invalid email"
-                elif not check_password_hash(user.password_hash, password):
+                if not check_password_hash(user.password_hash, password):
                     error = "Invalid password."
 
                 if error is None:

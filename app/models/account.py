@@ -29,13 +29,13 @@ class Account(db.Model):
 
         if password1 != password2:
             error = "Password confirmation doesn't match."
-        elif len(password1) < 8:
+        if len(password1) < 8:
             error = "Password must be at least 8 characters."
-        elif not any(i.isdigit() for i in password1):
+        if not any(i.isdigit() for i in password1):
             error = "Password must contain at least one number."
-        elif not any(j.isupper() for j in password1):
+        if not any(j.isupper() for j in password1):
             error = "Password must contain at least one capital letter."
-        elif not any(k in special_characters for k in password1):
+        if not any(k in special_characters for k in password1):
             error = "Password must contain at least one special character ($, #, @, !, *)."
 
         return error

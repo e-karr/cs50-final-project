@@ -29,7 +29,8 @@ main %}
     </div>
     <div class="col">
       <h3 class="text-center mb-3">Registration History</h3>
-      {% if history %} {% for event_name, month, day, year, time, location, team_name, passcode, captain, team_id, players in history %}
+      {% if history %} {% for event_name, month, day, year, time, location,
+      team_name, passcode, captain, team_id, players in history %}
 
       <div class="list-group list-group-item container">
         <div class="row">
@@ -37,8 +38,7 @@ main %}
             <h5 class="mb-1">{{ team_name }}</h5>
             <div>{{ event_name }}</div>
             <small class="mb-1"
-              >{{ month }} {{ day }}, {{ year }}; {{ time
-              }}</small
+              >{{ month }} {{ day }}, {{ year }}; {{ time }}</small
             >
             <div><small>{{ location }}</small></div>
             <div>
@@ -154,7 +154,10 @@ main %}
                     >
                       Cancel
                     </button>
-                    <form action="{{ url_for('teams.deregister_team') }}" method="post">
+                    <form
+                      action="{{ url_for('teams.deregister_team') }}"
+                      method="post"
+                    >
                       <button
                         type="submit"
                         name="de-register"
@@ -190,7 +193,10 @@ main %}
                       aria-label="Close"
                     ></button>
                   </div>
-                  <form action="{{ url_for('teams.update_captain') }}" method="post">
+                  <form
+                    action="{{ url_for('teams.update_captain') }}"
+                    method="post"
+                  >
                     <div class="modal-body text-start">
                       <select class="form-select" name="new_captain">
                         <option disabled selected>Select New Captain...</option>
@@ -268,7 +274,10 @@ main %}
                     >
                       Cancel
                     </button>
-                    <form action="{{ url_for('teams.leave_team') }}" method="post">
+                    <form
+                      action="{{ url_for('teams.leave_team') }}"
+                      method="post"
+                    >
                       <button
                         type="submit"
                         name="leave"

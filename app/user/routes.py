@@ -55,18 +55,17 @@ def update():
     # validate form input
     if not first_name:
         error = "Must enter first name"
-    elif not last_name:
+    if not last_name:
         error = "Must enter last name"
-    elif not phone_number:
+    if not phone_number:
         error = "Must enter phone number"
-    elif not email:
-        error = "Must enter an email."
-    elif not gender:
-        error = "Must select a gender"
     else:
         error = Account.validate_phone_number(phone_number)
+    if not email:
+        error = "Must enter an email."
+    if not gender:
+        error = "Must select a gender"
     
-
     if error is None:
         try:
             # Update account information, if necessary
@@ -116,13 +115,13 @@ def password():
 
     if not old_password:
         error = "Must enter current password."
-    elif not new_password:
+    if not new_password:
         error = "Must enter new password."
-    elif not confirmation:
+    if not confirmation:
         error = "Must confirm new password."
-    elif not check_password_hash(user.password_hash, old_password):
+    if not check_password_hash(user.password_hash, old_password):
         error = "Invalid current password."
-    else:
+    if new_password and confirmation:
         error = Account.validate_password(new_password, confirmation)
 
     if error is None:
