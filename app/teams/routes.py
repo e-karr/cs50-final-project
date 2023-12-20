@@ -88,7 +88,7 @@ def team_register():
             db.session.commit()
 
             # update spots available
-            selected_event.update_spots_available(db.session)
+            selected_event.update_spots_available('subtract', db.session)
 
             # Add captain to registered_players
             player = Player(
@@ -256,42 +256,38 @@ def leave_team():
 @bp.route("/de-register_team", methods=["POST"])
 @login_required
 def deregister_team():
-    return "Pending updates"
-#     """De-Register Team"""
+    """De-Register Team"""
 
-#     # Get selected team
-#     team_id = int(request.form.get("de-register"))
+    team_id = int(request.form.get("de-register"))
+    error = None
 
-#     # Get event id
-#     event_id = db.execute("""SELECT event_id 
-#                              FROM teams 
-#                              WHERE id = ?""", 
-#                              team_id)
+    try:
 
-#     # Get team name
-#     team_name = db.execute("""SELECT team_name 
-#                               FROM teams 
-#                               WHERE id = ?""", 
-#                               team_id)
+        team = db.session.get(Team, team_id)
+        
+        event = db.session.query(Event).filter_by(id=team.event_id).first()
+        
+        db.session.query(Team).filter_by(id=team_id).delete()
 
-#     # Delete team from teams table in database
-#     db.execute("""DELETE FROM teams 
-#                   WHERE id = ?""", 
-#                   team_id)
+        # Delete team roster from registered_players table
+        db.session.query(Player).filter_by(team_id=team_id).delete()
 
-#     # Delete team roster from registered_players table
-#     db.execute("""DELETE FROM registered_players 
-#                   WHERE team_id = ?""", 
-#                   team_id)
+        db.session.commit()
 
-#     # Update spots_available in events table
-#     db.execute("""UPDATE events 
-#                   SET spots_available = spots_available + 1 
-#                   WHERE id = ?""", 
-#                   event_id[0]["event_id"])
+        # Update spots_available in events table
+        event.update_spots_available('add', db.session)
 
-#     flash("You have successfully de-registered %s." % (team_name[0]["team_name"]), "success")
-#     return redirect("/profile")
+        flash(f"You have successfully de-registered {team.team_name}.", "success")
+    except Exception as e:
+        print(f"There was an error: {e}")
+        error = "There was an error processing your request"
+        db.session.rollback()
+
+    if error:
+        flash(error, "error")
+    
+    return redirect(url_for('user.profile'))
+
 
 @bp.route("/update_captain", methods=["POST"])
 @login_required
